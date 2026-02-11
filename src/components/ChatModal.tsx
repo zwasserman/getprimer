@@ -38,7 +38,7 @@ const initialMessages: Message[] = [
 ];
 
 const actionChips = [
-  { label: "I've done this ✓", id: "done" },
+  { label: "I've done this", id: "done" },
   { label: "Walk me through it", id: "walkthrough" },
   { label: "Remind me later", id: "remind" },
   { label: "Skip for now", id: "skip" },
