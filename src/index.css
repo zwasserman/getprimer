@@ -127,4 +127,12 @@
   .shadow-tab-bar {
     box-shadow: var(--shadow-tab-bar);
   }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
 }
