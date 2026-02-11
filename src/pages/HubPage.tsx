@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { User, Flame, Droplets, Shield, Zap, CheckCircle, ChevronRight } from "lucide-react";
 import StatusBadge, { type Status } from "@/components/StatusBadge";
+import TaskChatModal, { type TaskForModal } from "@/components/TaskChatModal";
 import { differenceInDays, format } from "date-fns";
 
 function computeStatus(dueDate: Date): Status {
@@ -22,11 +24,11 @@ function formatDueLabel(dueDate: Date, status: Status): string {
 }
 
 const allTasks = [
-  { id: 1, title: "Replace HVAC Filter", icon: Flame, category: "HVAC", dueDate: new Date("2026-02-05") },
-  { id: 2, title: "Test Smoke Detectors", icon: Shield, category: "Safety", dueDate: new Date("2026-02-18") },
-  { id: 3, title: "Check Water Heater", icon: Droplets, category: "Plumbing", dueDate: new Date("2026-02-25") },
-  { id: 4, title: "Inspect Electrical Panel", icon: Zap, category: "Electrical", dueDate: new Date("2026-04-15") },
-  { id: 5, title: "Clean Gutters", icon: Flame, category: "Exterior", dueDate: new Date("2026-05-10") },
+  { id: 1, title: "Replace HVAC Filter", icon: Flame, category: "HVAC", difficulty: "Easy", dueDate: new Date("2026-02-05") },
+  { id: 2, title: "Test Smoke Detectors", icon: Shield, category: "Safety", difficulty: "Easy", dueDate: new Date("2026-02-18") },
+  { id: 3, title: "Check Water Heater", icon: Droplets, category: "Plumbing", difficulty: "Moderate", dueDate: new Date("2026-02-25") },
+  { id: 4, title: "Inspect Electrical Panel", icon: Zap, category: "Electrical", difficulty: "Easy", dueDate: new Date("2026-04-15") },
+  { id: 5, title: "Clean Gutters", icon: Flame, category: "Exterior", difficulty: "Moderate", dueDate: new Date("2026-05-10") },
 ].map((t) => ({ ...t, status: computeStatus(t.dueDate) }));
 
 const priorityTasks = allTasks.filter((t) => t.status === "overdue" || t.status === "due");
@@ -39,6 +41,7 @@ const recentActivity = [
 
 const HubPage = () => {
   const navigate = useNavigate();
+  const [selectedTask, setSelectedTask] = useState<TaskForModal | null>(null);
 
   return (
     <motion.div
@@ -77,7 +80,7 @@ const HubPage = () => {
                 <motion.button
                   key={task.id}
                   whileTap={{ scale: 0.97 }}
-                  onClick={() => navigate(`/tasks/${task.id}`)}
+                  onClick={() => setSelectedTask(task)}
                   className="card-primer flex-shrink-0 w-[190px] h-[140px] flex flex-col justify-between text-left"
                 >
                   <div className="flex items-center justify-between">
@@ -111,6 +114,11 @@ const HubPage = () => {
         </div>
       </section>
 
+      <TaskChatModal
+        task={selectedTask}
+        open={!!selectedTask}
+        onClose={() => setSelectedTask(null)}
+      />
     </motion.div>
   );
 };

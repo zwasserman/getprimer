@@ -7,7 +7,7 @@ import BottomTabBar from "@/components/BottomTabBar";
 import HubPage from "@/pages/HubPage";
 import ChatPage from "@/pages/ChatPage";
 import TasksPage from "@/pages/TasksPage";
-import TaskDetailPage from "@/pages/TaskDetailPage";
+
 import ProsPage from "@/pages/ProsPage";
 import OnboardingPage from "@/pages/OnboardingPage";
 import NotFound from "./pages/NotFound";
@@ -24,7 +24,7 @@ const AppLayout = () => {
         <Route path="/" element={<HubPage />} />
         <Route path="/chat" element={<ChatPage />} />
         <Route path="/tasks" element={<TasksPage />} />
-        <Route path="/tasks/:id" element={<TaskDetailPage />} />
+        
         <Route path="/pros" element={<ProsPage />} />
         <Route path="/onboarding" element={<OnboardingPage />} />
         <Route path="*" element={<NotFound />} />
