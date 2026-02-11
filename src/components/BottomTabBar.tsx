@@ -4,8 +4,8 @@ import { motion } from "framer-motion";
 
 const tabs = [
   { path: "/", label: "Home", icon: Home },
-  { path: "/chat", label: "Chat", icon: MessageCircle },
   { path: "/tasks", label: "Tasks", icon: CheckCircle },
+  { path: "/chat", label: "Chat", icon: MessageCircle },
   { path: "/pros", label: "Pros", icon: Wrench },
 ];
 
