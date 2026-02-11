@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Mic, Send, Flame, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Mic, Send, Flame, CheckCircle2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import StatusBadge from "@/components/StatusBadge";
 
@@ -96,6 +96,8 @@ const chipResponses: Record<string, Message[]> = {
 
 const walkthroughSteps = chipResponses.walkthrough;
 
+const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
+
 interface ChatModalProps {
   open: boolean;
   onClose: () => void;
@@ -105,6 +107,7 @@ const ChatModal = ({ open, onClose }: ChatModalProps) => {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);
+  const [streaming, setStreaming] = useState(false);
   const [walkthroughQueue, setWalkthroughQueue] = useState<Message[]>([]);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -152,20 +155,106 @@ const ChatModal = ({ open, onClose }: ChatModalProps) => {
     }
   };
 
-  const sendMessage = (text: string) => {
-    if (!text.trim() || typing) return;
-    setMessages((prev) => [...prev, { id: Date.now(), type: "user", content: text }]);
+  const streamAIResponse = async (conversationHistory: { role: string; content: string }[]) => {
+    setStreaming(true);
+    const assistantMsgId = Date.now() + 1;
+    let assistantContent = "";
+
+    // Add empty assistant message
+    setMessages((prev) => [...prev, { id: assistantMsgId, type: "system", content: "" }]);
+
+    try {
+      const resp = await fetch(CHAT_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({ messages: conversationHistory }),
+      });
+
+      if (!resp.ok || !resp.body) {
+        const errorData = await resp.json().catch(() => ({}));
+        const errorMsg = errorData.error || "Sorry, I couldn't get a response right now. Try again in a moment.";
+        setMessages((prev) =>
+          prev.map((m) => (m.id === assistantMsgId ? { ...m, content: errorMsg } : m))
+        );
+        setStreaming(false);
+        return;
+      }
+
+      const reader = resp.body.getReader();
+      const decoder = new TextDecoder();
+      let textBuffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        textBuffer += decoder.decode(value, { stream: true });
+
+        let newlineIndex: number;
+        while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
+          let line = textBuffer.slice(0, newlineIndex);
+          textBuffer = textBuffer.slice(newlineIndex + 1);
+
+          if (line.endsWith("\r")) line = line.slice(0, -1);
+          if (line.startsWith(":") || line.trim() === "") continue;
+          if (!line.startsWith("data: ")) continue;
+
+          const jsonStr = line.slice(6).trim();
+          if (jsonStr === "[DONE]") break;
+
+          try {
+            const parsed = JSON.parse(jsonStr);
+            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
+            if (content) {
+              assistantContent += content;
+              setMessages((prev) =>
+                prev.map((m) => (m.id === assistantMsgId ? { ...m, content: assistantContent } : m))
+              );
+            }
+          } catch {
+            textBuffer = line + "\n" + textBuffer;
+            break;
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Stream error:", e);
+      if (!assistantContent) {
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === assistantMsgId
+              ? { ...m, content: "Sorry, something went wrong. Please try again." }
+              : m
+          )
+        );
+      }
+    }
+
+    setStreaming(false);
+  };
+
+  const sendMessage = async (text: string) => {
+    if (!text.trim() || typing || streaming) return;
+    const userMsg: Message = { id: Date.now(), type: "user", content: text };
+    setMessages((prev) => [...prev, userMsg]);
     setInput("");
-    setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        { id: Date.now() + 1, type: "system", content: "Thanks for letting me know! I'll keep that in mind as we work through your home tasks together." },
-      ]);
-    }, 800);
+
+    // Build conversation history from user/system messages for AI context
+    const history = messages
+      .filter((m) => m.type === "user" || m.type === "system")
+      .map((m) => ({
+        role: m.type === "user" ? "user" : "assistant",
+        content: m.content,
+      }));
+    history.push({ role: "user", content: text });
+
+    await streamAIResponse(history);
   };
 
   const handleChip = (id: string) => {
-    if (typing) return;
+    if (typing || streaming) return;
     const chip = actionChips.find((c) => c.id === id);
     if (!chip) return;
     setMessages((prev) => [...prev, { id: Date.now(), type: "user", content: chip.label }]);
@@ -207,7 +296,7 @@ const ChatModal = ({ open, onClose }: ChatModalProps) => {
                   transition={{ delay: i * 0.05 }}
                 >
                   {msg.type === "system" && (
-                    <p className="text-body text-foreground max-w-[90%]">{msg.content}</p>
+                    <p className="text-body text-foreground max-w-[90%] whitespace-pre-wrap">{msg.content}</p>
                   )}
 
                   {msg.type === "walkthrough-step" && msg.stepIndex != null && (
@@ -266,10 +355,16 @@ const ChatModal = ({ open, onClose }: ChatModalProps) => {
                   )}
                 </motion.div>
               ))}
+              {streaming && (
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Loader2 size={16} className="animate-spin" />
+                  <span className="text-caption">Thinking...</span>
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Input - pinned to bottom of viewport */}
+          {/* Input */}
           <div className="px-4 pb-4 pt-2 bg-background">
             <div className="flex items-center gap-2 bg-card rounded-full shadow-elevated px-4 py-2">
               <input
@@ -277,12 +372,18 @@ const ChatModal = ({ open, onClose }: ChatModalProps) => {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && sendMessage(input)}
                 placeholder="Ask a question..."
-                className="flex-1 bg-transparent outline-none text-body text-foreground placeholder:text-muted-foreground"
+                disabled={streaming}
+                className="flex-1 bg-transparent outline-none text-body text-foreground placeholder:text-muted-foreground disabled:opacity-50"
               />
               <button className="text-muted-foreground hover:text-foreground transition-colors p-1" aria-label="Voice input">
                 <Mic size={20} />
               </button>
-              <button onClick={() => sendMessage(input)} className="text-primary hover:text-primary/80 transition-colors p-1" aria-label="Send">
+              <button
+                onClick={() => sendMessage(input)}
+                disabled={streaming}
+                className="text-primary hover:text-primary/80 transition-colors p-1 disabled:opacity-50"
+                aria-label="Send"
+              >
                 <Send size={20} />
               </button>
             </div>
