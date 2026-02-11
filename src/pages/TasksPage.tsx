@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Flame, Droplets, Shield, Zap, Circle, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import StatusBadge, { type Status } from "@/components/StatusBadge";
+import TaskChatModal, { type TaskForModal } from "@/components/TaskChatModal";
 import { differenceInDays, format } from "date-fns";
 
 interface Task {
@@ -53,7 +53,7 @@ const filters = ["All", "Due", "Completed", "Upcoming"];
 
 const TasksPage = () => {
   const [activeFilter, setActiveFilter] = useState("All");
-  const navigate = useNavigate();
+  const [selectedTask, setSelectedTask] = useState<TaskForModal | null>(null);
 
   const priorityTasks = allTasks.filter((t) => t.status === "overdue" || t.status === "due");
   const filteredTasks = activeFilter === "All"
@@ -62,6 +62,10 @@ const TasksPage = () => {
         if (activeFilter === "Due") return t.status === "due" || t.status === "overdue";
         return t.status === activeFilter.toLowerCase();
       });
+
+  const openTask = (task: Task) => {
+    setSelectedTask(task);
+  };
 
   return (
     <div className="flex flex-col min-h-screen px-4 pt-14 pb-32">
@@ -78,7 +82,7 @@ const TasksPage = () => {
                 <motion.button
                   key={task.id}
                   whileTap={{ scale: 0.97 }}
-                  onClick={() => navigate(`/tasks/${task.id}`)}
+                  onClick={() => openTask(task)}
                   className="card-primer flex-shrink-0 w-[190px] h-[140px] flex flex-col justify-between text-left"
                 >
                   <div className="flex items-center justify-between">
@@ -121,7 +125,7 @@ const TasksPage = () => {
             <motion.button
               key={task.id}
               whileTap={{ scale: 0.98 }}
-              onClick={() => navigate(`/tasks/${task.id}`)}
+              onClick={() => openTask(task)}
               className="flex items-center gap-3 py-4 px-1 text-left border-b border-border/50 last:border-0"
             >
               {isCompleted ? (
@@ -144,6 +148,12 @@ const TasksPage = () => {
           );
         })}
       </div>
+
+      <TaskChatModal
+        task={selectedTask}
+        open={!!selectedTask}
+        onClose={() => setSelectedTask(null)}
+      />
     </div>
   );
 };
