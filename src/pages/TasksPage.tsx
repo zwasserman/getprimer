@@ -49,7 +49,7 @@ const allTasks: Task[] = rawTasks.map((t) => ({
   status: computeStatus(t.dueDate, completedIds.has(t.id)),
 }));
 
-const filters = ["All", "Due", "Completed", "Upcoming"];
+const filters = ["All", "Overdue", "Upcoming", "Recently Completed"];
 
 const TasksPage = () => {
   const [activeFilter, setActiveFilter] = useState("All");
@@ -59,8 +59,10 @@ const TasksPage = () => {
   const filteredTasks = activeFilter === "All"
     ? allTasks
     : allTasks.filter((t) => {
-        if (activeFilter === "Due") return t.status === "due" || t.status === "overdue";
-        return t.status === activeFilter.toLowerCase();
+        if (activeFilter === "Overdue") return t.status === "overdue" || t.status === "due";
+        if (activeFilter === "Upcoming") return t.status === "upcoming";
+        if (activeFilter === "Recently Completed") return t.status === "completed";
+        return true;
       });
 
   const openTask = (task: Task) => {
