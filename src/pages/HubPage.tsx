@@ -64,7 +64,7 @@ const HubPage = () => {
       {priorityTasks.length > 0 && (
         <section className="mb-8">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-h3 text-foreground">Priority</h2>
+            <h2 className="text-h3 text-foreground">Priority tasks</h2>
             <button
               onClick={() => navigate("/tasks")}
               className="flex items-center gap-1 text-caption font-medium text-primary"
