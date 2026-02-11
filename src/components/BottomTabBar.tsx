@@ -9,20 +9,32 @@ const tabs = [
   { path: "/pros", label: "Pros", icon: Wrench },
 ];
 
-const BottomTabBar = () => {
+interface BottomTabBarProps {
+  onChatOpen?: () => void;
+}
+
+const BottomTabBar = ({ onChatOpen }: BottomTabBarProps) => {
   const location = useLocation();
   const navigate = useNavigate();
+
+  const handleTabClick = (path: string) => {
+    if (path === "/chat" && onChatOpen) {
+      onChatOpen();
+    } else {
+      navigate(path);
+    }
+  };
 
   return (
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
       <nav className="flex items-center gap-1 bg-card rounded-full px-3 py-2 shadow-elevated">
         {tabs.map((tab) => {
-          const isActive = location.pathname === tab.path;
+          const isActive = tab.path === "/chat" ? false : location.pathname === tab.path;
           const Icon = tab.icon;
           return (
             <button
               key={tab.path}
-              onClick={() => navigate(tab.path)}
+              onClick={() => handleTabClick(tab.path)}
               className={`relative flex items-center gap-2 px-4 py-2.5 rounded-full transition-all ${
                 isActive ? "text-primary" : "text-muted-foreground"
               }`}

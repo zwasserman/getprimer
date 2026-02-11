@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
-import { motion } from "framer-motion";
-import { Mic, Send, Flame, CheckCircle2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowLeft, Mic, Send, Flame, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import StatusBadge from "@/components/StatusBadge";
 
@@ -19,23 +19,23 @@ interface Message {
 }
 
 const initialMessages: Message[] = [
-{
-  id: 1,
-  type: "system",
-  content: "Here's your first simple task:"
-},
-{
-  id: 2,
-  type: "task-card",
-  content: "",
-  task: {
-    title: "Replace Your HVAC Filter",
-    category: "HVAC",
-    difficulty: "Easy",
-    why: "A clean filter improves air quality and keeps your system running efficiently. Most filters should be replaced every 1-3 months."
+  {
+    id: 1,
+    type: "system",
+    content: "Here's your first simple task:"
+  },
+  {
+    id: 2,
+    type: "task-card",
+    content: "",
+    task: {
+      title: "Replace Your HVAC Filter",
+      category: "HVAC",
+      difficulty: "Easy",
+      why: "A clean filter improves air quality and keeps your system running efficiently. Most filters should be replaced every 1-3 months."
+    }
   }
-}];
-
+];
 
 const actionChips = [
   { label: "I've done this ✓", id: "done" },
@@ -96,7 +96,12 @@ const chipResponses: Record<string, Message[]> = {
 
 const walkthroughSteps = chipResponses.walkthrough;
 
-const ChatPage = () => {
+interface ChatModalProps {
+  open: boolean;
+  onClose: () => void;
+}
+
+const ChatModal = ({ open, onClose }: ChatModalProps) => {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);
@@ -119,7 +124,6 @@ const ChatPage = () => {
   };
 
   const handleWalkthrough = () => {
-    // Show intro + first step only, queue the rest
     const intro = walkthroughSteps[0];
     const firstStep = walkthroughSteps[1];
     const remaining = walkthroughSteps.slice(2);
@@ -152,7 +156,6 @@ const ChatPage = () => {
     if (!text.trim() || typing) return;
     setMessages((prev) => [...prev, { id: Date.now(), type: "user", content: text }]);
     setInput("");
-
     setTimeout(() => {
       setMessages((prev) => [
         ...prev,
@@ -175,114 +178,119 @@ const ChatPage = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen">
-      <div className="px-4 pt-14 pb-3">
-        <h1 className="text-h1 text-foreground">Welcome Home,Zach! </h1>
-      </div>
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          initial={{ y: "100%" }}
+          animate={{ y: 0 }}
+          exit={{ y: "100%" }}
+          transition={{ type: "spring", damping: 28, stiffness: 300 }}
+          className="fixed inset-0 z-[100] bg-background flex flex-col"
+          style={{ overscrollBehavior: "contain" }}
+        >
+          {/* Header */}
+          <div className="flex items-center gap-3 px-4 pt-5 pb-3">
+            <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors p-1">
+              <ArrowLeft size={22} />
+            </button>
+            <h1 className="text-h3 text-foreground">Welcome Home, Zach!</h1>
+          </div>
 
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 pb-36">
-        <div className="flex flex-col gap-4">
-          {messages.map((msg, i) =>
-          <motion.div
-            key={msg.id}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.05 }}>
-
-              {msg.type === "system" &&
-            <p className="text-body text-foreground max-w-[90%]">{msg.content}</p>
-            }
-
-              {msg.type === "walkthrough-step" && msg.stepIndex != null &&
-            <div className="bg-card rounded-2xl p-4 max-w-[90%] border border-border/50">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-caption text-muted-foreground">Step {msg.stepIndex} of {msg.totalSteps}</span>
-                  </div>
-                  <p className="text-body text-foreground mb-3">{msg.content.replace(/\*\*Step \d:\*\* /, '')}</p>
-                  {completedSteps.has(msg.stepIndex) ? (
-                    <div className="flex items-center gap-1.5 text-success">
-                      <CheckCircle2 size={16} />
-                      <span className="text-body-small font-medium">Done!</span>
-                    </div>
-                  ) : (
-                    <Button
-                      variant="chip"
-                      size="chip"
-                      className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20"
-                      onClick={() => handleStepDone(msg.stepIndex!)}>
-                      Done with this step ✓
-                    </Button>
+          {/* Messages */}
+          <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 pb-24">
+            <div className="flex flex-col gap-4">
+              {messages.map((msg, i) => (
+                <motion.div
+                  key={msg.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                >
+                  {msg.type === "system" && (
+                    <p className="text-body text-foreground max-w-[90%]">{msg.content}</p>
                   )}
-                </div>
-            }
 
-              {msg.type === "user" &&
-            <div className="flex justify-end">
-                  <div className="bg-primary text-primary-foreground rounded-2xl rounded-br-md px-4 py-3 max-w-[80%]">
-                    <p className="text-body-small">{msg.content}</p>
-                  </div>
-                </div>
-            }
-
-              {msg.type === "task-card" && msg.task &&
-            <div className="flex flex-col gap-3">
-                  <div className="card-primer">
-                    <div className="flex items-center gap-2 mb-3">
-                      <div className="w-8 h-8 rounded-lg bg-secondary/10 flex items-center justify-center">
-                        <Flame size={16} className="text-secondary" />
+                  {msg.type === "walkthrough-step" && msg.stepIndex != null && (
+                    <div className="bg-card rounded-2xl p-4 max-w-[90%] border border-border/50">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-caption text-muted-foreground">Step {msg.stepIndex} of {msg.totalSteps}</span>
                       </div>
-                      <StatusBadge status="due" />
-                      <span className="text-caption text-muted-foreground ml-auto">{msg.task.difficulty}</span>
+                      <p className="text-body text-foreground mb-3">{msg.content.replace(/\*\*Step \d:\*\* /, '')}</p>
+                      {completedSteps.has(msg.stepIndex) ? (
+                        <div className="flex items-center gap-1.5 text-success">
+                          <CheckCircle2 size={16} />
+                          <span className="text-body-small font-medium">Done!</span>
+                        </div>
+                      ) : (
+                        <Button
+                          variant="chip"
+                          size="chip"
+                          className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20"
+                          onClick={() => handleStepDone(msg.stepIndex!)}
+                        >
+                          Done with this step ✓
+                        </Button>
+                      )}
                     </div>
-                    <h2 className="text-h2 text-foreground mb-2">{msg.task.title}</h2>
-                    <p className="text-body-small text-muted-foreground">{msg.task.why}</p>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {actionChips.map((chip) =>
-                <Button
-                  key={chip.id}
-                  variant="chip"
-                  size="chip"
-                  onClick={() => handleChip(chip.id)}>
+                  )}
 
-                        {chip.label}
-                      </Button>
-                )}
-                  </div>
-                </div>
-            }
-            </motion.div>
-          )}
-        </div>
-      </div>
+                  {msg.type === "user" && (
+                    <div className="flex justify-end">
+                      <div className="bg-primary text-primary-foreground rounded-2xl rounded-br-md px-4 py-3 max-w-[80%]">
+                        <p className="text-body-small">{msg.content}</p>
+                      </div>
+                    </div>
+                  )}
 
-      {/* Input */}
-      <div className="fixed bottom-24 left-0 right-0 px-4 pb-2">
-        <div className="flex items-center gap-2 bg-card rounded-full shadow-elevated px-4 py-2">
-          <input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && sendMessage(input)}
-            placeholder="Ask a question..."
-            className="flex-1 bg-transparent outline-none text-body text-foreground placeholder:text-muted-foreground" />
+                  {msg.type === "task-card" && msg.task && (
+                    <div className="flex flex-col gap-3">
+                      <div className="card-primer">
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="w-8 h-8 rounded-lg bg-secondary/10 flex items-center justify-center">
+                            <Flame size={16} className="text-secondary" />
+                          </div>
+                          <StatusBadge status="due" />
+                          <span className="text-caption text-muted-foreground ml-auto">{msg.task.difficulty}</span>
+                        </div>
+                        <h2 className="text-h2 text-foreground mb-2">{msg.task.title}</h2>
+                        <p className="text-body-small text-muted-foreground">{msg.task.why}</p>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {actionChips.map((chip) => (
+                          <Button key={chip.id} variant="chip" size="chip" onClick={() => handleChip(chip.id)}>
+                            {chip.label}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </motion.div>
+              ))}
+            </div>
+          </div>
 
-          <button
-            className="text-muted-foreground hover:text-foreground transition-colors p-1"
-            aria-label="Voice input">
-
-            <Mic size={20} />
-          </button>
-          <button
-            onClick={() => sendMessage(input)}
-            className="text-primary hover:text-primary/80 transition-colors p-1"
-            aria-label="Send">
-
-            <Send size={20} />
-          </button>
-        </div>
-      </div>
-    </div>);
-
+          {/* Input - pinned to bottom of viewport */}
+          <div className="px-4 pb-4 pt-2 bg-background">
+            <div className="flex items-center gap-2 bg-card rounded-full shadow-elevated px-4 py-2">
+              <input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && sendMessage(input)}
+                placeholder="Ask a question..."
+                className="flex-1 bg-transparent outline-none text-body text-foreground placeholder:text-muted-foreground"
+              />
+              <button className="text-muted-foreground hover:text-foreground transition-colors p-1" aria-label="Voice input">
+                <Mic size={20} />
+              </button>
+              <button onClick={() => sendMessage(input)} className="text-primary hover:text-primary/80 transition-colors p-1" aria-label="Send">
+                <Send size={20} />
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
 };
 
-export default ChatPage;
+export default ChatModal;

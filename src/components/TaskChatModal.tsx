@@ -68,7 +68,6 @@ const TaskChatModal = ({ task, open, onClose }: TaskChatModalProps) => {
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Reset state when task changes
   useEffect(() => {
     if (task && open) {
       const why = task.why || `Keeping up with "${task.title}" helps maintain your home's value and safety.`;
@@ -185,7 +184,7 @@ const TaskChatModal = ({ task, open, onClose }: TaskChatModalProps) => {
           animate={{ y: 0 }}
           exit={{ y: "100%" }}
           transition={{ type: "spring", damping: 28, stiffness: 300 }}
-          className="fixed inset-0 z-[100] bg-background flex flex-col rounded-t-3xl"
+          className="fixed inset-0 z-[100] bg-background flex flex-col"
           style={{ overscrollBehavior: "contain" }}
         >
           {/* Header */}
@@ -202,7 +201,7 @@ const TaskChatModal = ({ task, open, onClose }: TaskChatModalProps) => {
           </div>
 
           {/* Messages */}
-          <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 pb-36">
+          <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 pb-24">
             <div className="flex flex-col gap-4">
               {messages.map((msg, i) => (
                 <motion.div
@@ -274,8 +273,8 @@ const TaskChatModal = ({ task, open, onClose }: TaskChatModalProps) => {
             </div>
           </div>
 
-          {/* Input */}
-          <div className="fixed bottom-6 left-0 right-0 px-4 pb-2 z-[101]">
+          {/* Input - pinned to bottom */}
+          <div className="px-4 pb-4 pt-2 bg-background">
             <div className="flex items-center gap-2 bg-card rounded-full shadow-elevated px-4 py-2">
               <input
                 value={input}
