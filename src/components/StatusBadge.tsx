@@ -1,20 +1,49 @@
 import { cn } from "@/lib/utils";
+import { differenceInDays, format } from "date-fns";
 
-type Status = "due" | "overdue" | "completed" | "upcoming" | "new";
+type Status = "overdue" | "due" | "upcoming" | "completed";
 
-const statusConfig: Record<Status, { label: string; bgClass: string; textClass: string }> = {
-  due: { label: "Due", bgClass: "bg-status-due-bg", textClass: "text-status-due-text" },
-  overdue: { label: "Overdue", bgClass: "bg-status-overdue-bg", textClass: "text-status-overdue-text" },
-  completed: { label: "Done", bgClass: "bg-status-completed-bg", textClass: "text-status-completed-text" },
-  upcoming: { label: "Upcoming", bgClass: "bg-status-upcoming-bg", textClass: "text-status-upcoming-text" },
-  new: { label: "New", bgClass: "bg-status-new-bg", textClass: "text-status-new-text" },
+interface StatusBadgeProps {
+  status: Status;
+  dueDate?: Date;
+  className?: string;
+}
+
+function getLabel(status: Status, dueDate?: Date): string {
+  if (status === "overdue") return "Overdue";
+  if (status === "completed") return "Done";
+  if (status === "due") return "Due";
+
+  // upcoming (30+ days) — show "Month · X days"
+  if (status === "upcoming" && dueDate) {
+    const days = differenceInDays(dueDate, new Date());
+    return `${format(dueDate, "MMM")} · ${days}d`;
+  }
+
+  return "Upcoming";
+}
+
+const styleMap: Record<Status, { bgClass: string; textClass: string }> = {
+  overdue: { bgClass: "bg-status-overdue-bg", textClass: "text-status-overdue-text" },
+  due: { bgClass: "bg-status-due-bg", textClass: "text-status-due-text" },
+  upcoming: { bgClass: "bg-status-upcoming-bg", textClass: "text-status-upcoming-text" },
+  completed: { bgClass: "bg-status-completed-bg", textClass: "text-status-completed-text" },
 };
 
-const StatusBadge = ({ status, className }: { status: Status; className?: string }) => {
-  const config = statusConfig[status];
+const StatusBadge = ({ status, dueDate, className }: StatusBadgeProps) => {
+  const style = styleMap[status];
+  const label = getLabel(status, dueDate);
+
   return (
-    <span className={cn("inline-flex items-center px-2.5 py-0.5 rounded-full text-caption font-medium", config.bgClass, config.textClass, className)}>
-      {config.label}
+    <span
+      className={cn(
+        "inline-flex items-center px-2.5 py-0.5 rounded-full text-caption font-medium",
+        style.bgClass,
+        style.textClass,
+        className
+      )}
+    >
+      {label}
     </span>
   );
 };

@@ -231,7 +231,7 @@ const ChatPage = () => {
                       <div className="w-8 h-8 rounded-lg bg-secondary/10 flex items-center justify-center">
                         <Flame size={16} className="text-secondary" />
                       </div>
-                      <StatusBadge status="new" />
+                      <StatusBadge status="due" />
                       <span className="text-caption text-muted-foreground ml-auto">{msg.task.difficulty}</span>
                     </div>
                     <h2 className="text-h2 text-foreground mb-2">{msg.task.title}</h2>

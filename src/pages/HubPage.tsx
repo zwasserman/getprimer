@@ -3,7 +3,15 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { User, Flame, Droplets, Shield, Home as HomeIcon, CheckCircle, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import StatusBadge from "@/components/StatusBadge";
+import StatusBadge, { type Status } from "@/components/StatusBadge";
+import { differenceInDays } from "date-fns";
+
+function computeStatus(dueDate: Date): Status {
+  const days = differenceInDays(dueDate, new Date());
+  if (days < 0) return "overdue";
+  if (days <= 30) return "due";
+  return "upcoming";
+}
 
 const HubWelcome = ({ onStart }: { onStart: () => void }) => {
   const navigate = useNavigate();
@@ -40,10 +48,10 @@ const HubWelcome = ({ onStart }: { onStart: () => void }) => {
 };
 
 const comingUpTasks = [
-  { id: 1, title: "Replace HVAC Filter", icon: Flame, category: "HVAC", due: "Due Tue", status: "due" as const },
-  { id: 2, title: "Test Smoke Detectors", icon: Shield, category: "Safety", due: "Due Fri", status: "due" as const },
-  { id: 3, title: "Check Water Heater", icon: Droplets, category: "Plumbing", due: "Due Next Week", status: "upcoming" as const },
-];
+  { id: 1, title: "Replace HVAC Filter", icon: Flame, category: "HVAC", dueDate: new Date("2026-02-18") },
+  { id: 2, title: "Test Smoke Detectors", icon: Shield, category: "Safety", dueDate: new Date("2026-02-22") },
+  { id: 3, title: "Check Water Heater", icon: Droplets, category: "Plumbing", dueDate: new Date("2026-04-15") },
+].map((t) => ({ ...t, status: computeStatus(t.dueDate) }));
 
 const recentActivity = [
   { title: "Replaced HVAC filter", time: "2 days ago" },
@@ -86,11 +94,13 @@ const HubActive = () => {
                   <div className="w-9 h-9 rounded-xl bg-secondary/10 flex items-center justify-center">
                     <Icon size={18} className="text-secondary" />
                   </div>
-                  <StatusBadge status={task.status} />
+                  <StatusBadge status={task.status} dueDate={task.dueDate} />
                 </div>
                 <div>
                   <p className="text-body-small font-semibold text-foreground">{task.title}</p>
-                  <p className="text-caption text-muted-foreground mt-1">{task.due}</p>
+                  <p className="text-caption text-muted-foreground mt-1">
+                    {task.status === "due" ? `Due` : `${task.category}`}
+                  </p>
                 </div>
               </motion.button>
             );
@@ -158,6 +168,5 @@ const HubPage = () => {
   );
 };
 
-// Export toggle so we can switch from elsewhere for demo
 export { HubPage };
 export default HubPage;

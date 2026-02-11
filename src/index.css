@@ -50,8 +50,7 @@
     --status-completed-text: 128 28% 55%;
     --status-upcoming-bg: 204 33% 93%; /* #E8F0F5 */
     --status-upcoming-text: 198 31% 51%;
-    --status-new-bg: 33 100% 96%; /* #FFF8EF */
-    --status-new-text: 37 74% 60%;
+    /* removed status-new, using due/overdue/upcoming/completed only */
 
     /* Shadows */
     --shadow-card: 0 2px 8px rgba(45, 42, 38, 0.06);
