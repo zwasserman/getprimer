@@ -49,7 +49,7 @@ const HubPage = () => {
       {/* Header */}
       <div className="flex items-start justify-between mb-8">
         <div>
-          <h1 className="text-h1 text-foreground">Your Home</h1>
+          <h1 className="text-h1 text-foreground">Anna and Zach's Home</h1>
           <p className="text-body-small text-muted-foreground mt-1">1234 Main St, Yardley PA</p>
         </div>
         <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
