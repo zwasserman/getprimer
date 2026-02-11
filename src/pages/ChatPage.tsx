@@ -1,13 +1,15 @@
 import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Mic, Send, Flame } from "lucide-react";
+import { Mic, Send, Flame, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import StatusBadge from "@/components/StatusBadge";
 
 interface Message {
   id: number;
-  type: "system" | "user" | "task-card";
+  type: "system" | "user" | "task-card" | "walkthrough-step";
   content: string;
+  stepIndex?: number;
+  totalSteps?: number;
   task?: {
     title: string;
     category: string;
@@ -58,11 +60,11 @@ const chipResponses: Record<string, Message[]> = {
   ],
   walkthrough: [
     { id: 0, type: "system", content: "Great choice! Let's do this step by step 👇" },
-    { id: 0, type: "system", content: "**Step 1:** Find your HVAC unit — it's usually in a utility closet, basement, or attic. Look for a large metal box with ducts coming out of it." },
-    { id: 0, type: "system", content: "**Step 2:** Locate the filter slot. It's typically on the side or bottom of the unit, behind a small cover or along a track." },
-    { id: 0, type: "system", content: "**Step 3:** Slide the old filter out. Note the size printed on the frame (e.g., 16x25x1) and the arrow showing airflow direction." },
-    { id: 0, type: "system", content: "**Step 4:** Slide in the new filter with the arrow pointing toward the unit. Close the cover." },
-    { id: 0, type: "system", content: "That's it! The whole thing takes about 2 minutes. Let me know when you're done ✓" },
+    { id: 0, type: "walkthrough-step", stepIndex: 1, totalSteps: 4, content: "**Step 1:** Find your HVAC unit — it's usually in a utility closet, basement, or attic. Look for a large metal box with ducts coming out of it." },
+    { id: 0, type: "walkthrough-step", stepIndex: 2, totalSteps: 4, content: "**Step 2:** Locate the filter slot. It's typically on the side or bottom of the unit, behind a small cover or along a track." },
+    { id: 0, type: "walkthrough-step", stepIndex: 3, totalSteps: 4, content: "**Step 3:** Slide the old filter out. Note the size printed on the frame (e.g., 16x25x1) and the arrow showing airflow direction." },
+    { id: 0, type: "walkthrough-step", stepIndex: 4, totalSteps: 4, content: "**Step 4:** Slide in the new filter with the arrow pointing toward the unit. Close the cover." },
+    { id: 0, type: "system", content: "That's it! 🎉 The whole thing takes about 2 minutes. Let me know when you're done ✓" },
   ],
   remind: [
     { id: 0, type: "system", content: "No problem! I'll remind you about this in 3 days. 📅" },
@@ -92,10 +94,14 @@ const chipResponses: Record<string, Message[]> = {
   ],
 };
 
+const walkthroughSteps = chipResponses.walkthrough;
+
 const ChatPage = () => {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);
+  const [walkthroughQueue, setWalkthroughQueue] = useState<Message[]>([]);
+  const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -110,6 +116,36 @@ const ChatPage = () => {
         if (i === responses.length - 1) setTyping(false);
       }, 600 + i * 700);
     });
+  };
+
+  const handleWalkthrough = () => {
+    // Show intro + first step only, queue the rest
+    const intro = walkthroughSteps[0];
+    const firstStep = walkthroughSteps[1];
+    const remaining = walkthroughSteps.slice(2);
+    setWalkthroughQueue(remaining);
+    setCompletedSteps(new Set());
+    setTyping(true);
+    setTimeout(() => {
+      setMessages((prev) => [...prev, { ...intro, id: Date.now() }]);
+      setTimeout(() => {
+        setMessages((prev) => [...prev, { ...firstStep, id: Date.now() + 1 }]);
+        setTyping(false);
+      }, 600);
+    }, 400);
+  };
+
+  const handleStepDone = (stepIndex: number) => {
+    setCompletedSteps((prev) => new Set([...prev, stepIndex]));
+    if (walkthroughQueue.length > 0) {
+      const next = walkthroughQueue[0];
+      setWalkthroughQueue((prev) => prev.slice(1));
+      setTyping(true);
+      setTimeout(() => {
+        setMessages((prev) => [...prev, { ...next, id: Date.now() }]);
+        setTyping(false);
+      }, 500);
+    }
   };
 
   const sendMessage = (text: string) => {
@@ -130,8 +166,12 @@ const ChatPage = () => {
     const chip = actionChips.find((c) => c.id === id);
     if (!chip) return;
     setMessages((prev) => [...prev, { id: Date.now(), type: "user", content: chip.label }]);
-    const responses = chipResponses[id];
-    if (responses) addResponsesSequentially(responses);
+    if (id === "walkthrough") {
+      handleWalkthrough();
+    } else {
+      const responses = chipResponses[id];
+      if (responses) addResponsesSequentially(responses);
+    }
   };
 
   return (
@@ -151,6 +191,29 @@ const ChatPage = () => {
 
               {msg.type === "system" &&
             <p className="text-body text-foreground max-w-[90%]">{msg.content}</p>
+            }
+
+              {msg.type === "walkthrough-step" && msg.stepIndex != null &&
+            <div className="bg-card rounded-2xl p-4 max-w-[90%] border border-border/50">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-caption text-muted-foreground">Step {msg.stepIndex} of {msg.totalSteps}</span>
+                  </div>
+                  <p className="text-body text-foreground mb-3">{msg.content.replace(/\*\*Step \d:\*\* /, '')}</p>
+                  {completedSteps.has(msg.stepIndex) ? (
+                    <div className="flex items-center gap-1.5 text-success">
+                      <CheckCircle2 size={16} />
+                      <span className="text-body-small font-medium">Done!</span>
+                    </div>
+                  ) : (
+                    <Button
+                      variant="chip"
+                      size="chip"
+                      className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20"
+                      onClick={() => handleStepDone(msg.stepIndex!)}>
+                      Done with this step ✓
+                    </Button>
+                  )}
+                </div>
             }
 
               {msg.type === "user" &&
