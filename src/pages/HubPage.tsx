@@ -111,24 +111,6 @@ const HubPage = () => {
         </div>
       </section>
 
-      {/* Progress */}
-      <section>
-        <h2 className="text-h3 text-foreground mb-4">Your Progress</h2>
-        <div className="card-primer">
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-body-small font-medium text-foreground">8 of 12 tasks</p>
-            <p className="text-caption text-muted-foreground">67%</p>
-          </div>
-          <div className="h-2.5 bg-muted rounded-full overflow-hidden">
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: "67%" }}
-              transition={{ duration: 0.8, ease: "easeOut" }}
-              className="h-full bg-primary rounded-full"
-            />
-          </div>
-        </div>
-      </section>
     </motion.div>
   );
 };
