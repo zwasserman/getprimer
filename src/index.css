@@ -2,95 +2,71 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
-
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Primer Warm Palette */
+    --background: 34 33% 96%; /* #FAF7F2 warm cream */
+    --foreground: 24 6% 16%; /* #2D2A26 warm charcoal */
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%; /* #FFFFFF */
+    --card-foreground: 24 6% 16%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 24 6% 16%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 18 58% 57%; /* #D4764E burnt orange */
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 198 31% 51%; /* #5B8FA8 warm blue */
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 34 33% 96%;
+    --muted-foreground: 30 4% 52%; /* #8A857E warm gray */
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 37 74% 60%; /* #E8B44E golden yellow */
+    --accent-foreground: 24 6% 16%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 42% 56%; /* #C45B5B muted red */
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --success: 128 28% 55%; /* #6BAE72 */
+    --success-foreground: 0 0% 100%;
 
-    --radius: 0.5rem;
+    --warning: 25 58% 57%; /* #D4934E */
+    --warning-foreground: 24 6% 16%;
 
-    --sidebar-background: 0 0% 98%;
+    --border: 30 15% 90%;
+    --input: 34 33% 96%;
+    --ring: 18 58% 57%;
 
-    --sidebar-foreground: 240 5.3% 26.1%;
+    --radius: 1rem;
 
-    --sidebar-primary: 240 5.9% 10%;
+    /* Status badge colors */
+    --status-due-bg: 33 100% 94%; /* #FFF0E0 */
+    --status-due-text: 18 58% 57%;
+    --status-overdue-bg: 0 82% 96%; /* #FDEAEA */
+    --status-overdue-text: 0 42% 56%;
+    --status-completed-bg: 128 33% 93%; /* #E8F5EA */
+    --status-completed-text: 128 28% 55%;
+    --status-upcoming-bg: 204 33% 93%; /* #E8F0F5 */
+    --status-upcoming-text: 198 31% 51%;
+    --status-new-bg: 33 100% 96%; /* #FFF8EF */
+    --status-new-text: 37 74% 60%;
 
-    --sidebar-primary-foreground: 0 0% 98%;
+    /* Shadows */
+    --shadow-card: 0 2px 8px rgba(45, 42, 38, 0.06);
+    --shadow-elevated: 0 4px 16px rgba(45, 42, 38, 0.1);
+    --shadow-tab-bar: 0 -2px 16px rgba(45, 42, 38, 0.08);
 
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+    /* Sidebar (unused but required) */
+    --sidebar-background: 34 33% 96%;
+    --sidebar-foreground: 24 6% 16%;
+    --sidebar-primary: 18 58% 57%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-accent: 34 33% 96%;
+    --sidebar-accent-foreground: 24 6% 16%;
+    --sidebar-border: 30 15% 90%;
+    --sidebar-ring: 18 58% 57%;
   }
 }
 
@@ -100,6 +76,56 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@layer utilities {
+  .text-display {
+    @apply text-[34px] font-bold leading-tight tracking-tight;
+  }
+
+  .text-h1 {
+    @apply text-[28px] font-bold leading-tight;
+  }
+
+  .text-h2 {
+    @apply text-[22px] font-semibold leading-snug;
+  }
+
+  .text-h3 {
+    @apply text-[18px] font-semibold leading-snug;
+  }
+
+  .text-body {
+    @apply text-base leading-relaxed;
+  }
+
+  .text-body-small {
+    @apply text-sm leading-relaxed;
+  }
+
+  .text-caption {
+    @apply text-xs font-medium;
+  }
+
+  .card-primer {
+    @apply bg-card rounded-2xl p-4;
+    box-shadow: var(--shadow-card);
+  }
+
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
+
+  .shadow-elevated {
+    box-shadow: var(--shadow-elevated);
+  }
+
+  .shadow-tab-bar {
+    box-shadow: var(--shadow-tab-bar);
   }
 }
