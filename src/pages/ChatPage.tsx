@@ -36,44 +36,102 @@ const initialMessages: Message[] = [
 
 
 const actionChips = [
-{ label: "I've done this ✓", id: "done" },
-{ label: "Walk me through it", id: "walkthrough" },
-{ label: "Remind me later", id: "remind" },
-{ label: "Skip for now", id: "skip" }];
+  { label: "I've done this ✓", id: "done" },
+  { label: "Walk me through it", id: "walkthrough" },
+  { label: "Remind me later", id: "remind" },
+  { label: "Skip for now", id: "skip" },
+];
 
+const chipResponses: Record<string, Message[]> = {
+  done: [
+    { id: 0, type: "system", content: "Nice work! 🎉 Replacing your HVAC filter is one of the most impactful things you can do for your home." },
+    { id: 0, type: "system", content: "I've marked that as complete. Here's your next task:" },
+    {
+      id: 0, type: "task-card", content: "",
+      task: {
+        title: "Test Your Smoke Detectors",
+        category: "Safety",
+        difficulty: "Easy",
+        why: "Smoke detectors save lives — but only if they work. Press the test button on each one to make sure they're functioning properly.",
+      },
+    },
+  ],
+  walkthrough: [
+    { id: 0, type: "system", content: "Great choice! Let's do this step by step 👇" },
+    { id: 0, type: "system", content: "**Step 1:** Find your HVAC unit — it's usually in a utility closet, basement, or attic. Look for a large metal box with ducts coming out of it." },
+    { id: 0, type: "system", content: "**Step 2:** Locate the filter slot. It's typically on the side or bottom of the unit, behind a small cover or along a track." },
+    { id: 0, type: "system", content: "**Step 3:** Slide the old filter out. Note the size printed on the frame (e.g., 16x25x1) and the arrow showing airflow direction." },
+    { id: 0, type: "system", content: "**Step 4:** Slide in the new filter with the arrow pointing toward the unit. Close the cover." },
+    { id: 0, type: "system", content: "That's it! The whole thing takes about 2 minutes. Let me know when you're done ✓" },
+  ],
+  remind: [
+    { id: 0, type: "system", content: "No problem! I'll remind you about this in 3 days. 📅" },
+    { id: 0, type: "system", content: "In the meantime, here's something even quicker:" },
+    {
+      id: 0, type: "task-card", content: "",
+      task: {
+        title: "Check Your Water Heater Temperature",
+        category: "Plumbing",
+        difficulty: "Easy",
+        why: "Most water heaters are set too high from the factory. Setting it to 120°F saves energy and prevents scalding.",
+      },
+    },
+  ],
+  skip: [
+    { id: 0, type: "system", content: "Skipped for now — no worries, we'll come back to it later." },
+    { id: 0, type: "system", content: "Here's another task you might want to tackle:" },
+    {
+      id: 0, type: "task-card", content: "",
+      task: {
+        title: "Locate Your Main Water Shut-Off",
+        category: "Plumbing",
+        difficulty: "Easy",
+        why: "In a plumbing emergency, you need to know where this is fast. It's usually near the water meter or where the main line enters your home.",
+      },
+    },
+  ],
+};
 
 const ChatPage = () => {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState("");
+  const [typing, setTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
 
+  const addResponsesSequentially = (responses: Message[]) => {
+    setTyping(true);
+    responses.forEach((msg, i) => {
+      setTimeout(() => {
+        setMessages((prev) => [...prev, { ...msg, id: Date.now() + i }]);
+        if (i === responses.length - 1) setTyping(false);
+      }, 600 + i * 700);
+    });
+  };
+
   const sendMessage = (text: string) => {
-    if (!text.trim()) return;
-    setMessages((prev) => [
-    ...prev,
-    { id: Date.now(), type: "user", content: text }]
-    );
+    if (!text.trim() || typing) return;
+    setMessages((prev) => [...prev, { id: Date.now(), type: "user", content: text }]);
     setInput("");
-    // Simulate response
+
     setTimeout(() => {
       setMessages((prev) => [
-      ...prev,
-      {
-        id: Date.now() + 1,
-        type: "system",
-        content: "Great choice! I'll walk you through it step by step. First, locate your HVAC unit — it's usually in a utility closet, basement, or attic. Look for a slot where the filter slides in."
-      }]
-      );
+        ...prev,
+        { id: Date.now() + 1, type: "system", content: "Thanks for letting me know! I'll keep that in mind as we work through your home tasks together." },
+      ]);
     }, 800);
   };
 
   const handleChip = (id: string) => {
+    if (typing) return;
     const chip = actionChips.find((c) => c.id === id);
-    if (chip) sendMessage(chip.label);
+    if (!chip) return;
+    setMessages((prev) => [...prev, { id: Date.now(), type: "user", content: chip.label }]);
+    const responses = chipResponses[id];
+    if (responses) addResponsesSequentially(responses);
   };
 
   return (
