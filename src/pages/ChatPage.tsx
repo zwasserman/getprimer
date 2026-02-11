@@ -20,7 +20,7 @@ const initialMessages: Message[] = [
 {
   id: 1,
   type: "system",
-  content: "Here's your first task:"
+  content: "Here's your first simple task:"
 },
 {
   id: 2,
