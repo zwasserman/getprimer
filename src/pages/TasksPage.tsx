@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Flame, Droplets, Shield, Zap, Circle, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import StatusBadge, { type Status } from "@/components/StatusBadge";
+import { differenceInDays, format } from "date-fns";
 
 interface Task {
   id: number;
@@ -11,20 +12,42 @@ interface Task {
   category: string;
   difficulty: string;
   status: Status;
-  due: string;
+  dueDate: Date;
   icon: typeof Flame;
 }
 
-const allTasks: Task[] = [
-  { id: 1, title: "Replace HVAC Filter", category: "HVAC", difficulty: "Easy", status: "overdue", due: "Jun 10", icon: Flame },
-  { id: 2, title: "Test Smoke Detectors", category: "Safety", difficulty: "Easy", status: "due", due: "Jun 15", icon: Shield },
-  { id: 3, title: "Check Water Heater", category: "Plumbing", difficulty: "Moderate", status: "due", due: "Jun 18", icon: Droplets },
-  { id: 4, title: "Inspect Electrical Panel", category: "Electrical", difficulty: "Easy", status: "upcoming", due: "Jul 1", icon: Zap },
-  { id: 5, title: "Clean Gutters", category: "Exterior", difficulty: "Moderate", status: "upcoming", due: "Jul 10", icon: Flame },
-  { id: 6, title: "Test GFCIs", category: "Electrical", difficulty: "Easy", status: "completed", due: "Jun 5", icon: Zap },
-  { id: 7, title: "Check Sump Pump", category: "Plumbing", difficulty: "Easy", status: "completed", due: "Jun 2", icon: Droplets },
-  { id: 8, title: "Change Door Locks", category: "Safety", difficulty: "Easy", status: "completed", due: "May 28", icon: Shield },
+function computeStatus(dueDate: Date, completed: boolean): Status {
+  if (completed) return "completed";
+  const days = differenceInDays(dueDate, new Date());
+  if (days < 0) return "overdue";
+  if (days <= 30) return "due";
+  return "upcoming";
+}
+
+function formatDueLabel(dueDate: Date, status: Status): string {
+  if (status === "overdue") return `Was ${format(dueDate, "MMM d")}`;
+  if (status === "due") return `Due ${format(dueDate, "MMM d")}`;
+  const days = differenceInDays(dueDate, new Date());
+  return `${format(dueDate, "MMM d")} · ${days}d`;
+}
+
+const completedIds = new Set([6, 7, 8]);
+
+const rawTasks = [
+  { id: 1, title: "Replace HVAC Filter", category: "HVAC", difficulty: "Easy", dueDate: new Date("2026-02-05"), icon: Flame },
+  { id: 2, title: "Test Smoke Detectors", category: "Safety", difficulty: "Easy", dueDate: new Date("2026-02-18"), icon: Shield },
+  { id: 3, title: "Check Water Heater", category: "Plumbing", difficulty: "Moderate", dueDate: new Date("2026-02-25"), icon: Droplets },
+  { id: 4, title: "Inspect Electrical Panel", category: "Electrical", difficulty: "Easy", dueDate: new Date("2026-04-15"), icon: Zap },
+  { id: 5, title: "Clean Gutters", category: "Exterior", difficulty: "Moderate", dueDate: new Date("2026-05-10"), icon: Flame },
+  { id: 6, title: "Test GFCIs", category: "Electrical", difficulty: "Easy", dueDate: new Date("2026-02-01"), icon: Zap },
+  { id: 7, title: "Check Sump Pump", category: "Plumbing", difficulty: "Easy", dueDate: new Date("2026-01-28"), icon: Droplets },
+  { id: 8, title: "Change Door Locks", category: "Safety", difficulty: "Easy", dueDate: new Date("2026-01-20"), icon: Shield },
 ];
+
+const allTasks: Task[] = rawTasks.map((t) => ({
+  ...t,
+  status: computeStatus(t.dueDate, completedIds.has(t.id)),
+}));
 
 const filters = ["All", "Due", "Completed", "Upcoming"];
 
@@ -62,11 +85,11 @@ const TasksPage = () => {
                     <div className="w-9 h-9 rounded-xl bg-secondary/10 flex items-center justify-center">
                       <Icon size={18} className="text-secondary" />
                     </div>
-                    <StatusBadge status={task.status} />
+                    <StatusBadge status={task.status} dueDate={task.dueDate} />
                   </div>
                   <div>
                     <p className="text-body-small font-semibold text-foreground">{task.title}</p>
-                    <p className="text-caption text-muted-foreground mt-1">{task.due}</p>
+                    <p className="text-caption text-muted-foreground mt-1">{formatDueLabel(task.dueDate, task.status)}</p>
                   </div>
                 </motion.button>
               );
@@ -115,7 +138,7 @@ const TasksPage = () => {
                 </p>
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
-                <StatusBadge status={task.status} />
+                <StatusBadge status={task.status} dueDate={task.dueDate} />
               </div>
             </motion.button>
           );
