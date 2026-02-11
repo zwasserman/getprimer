@@ -12,15 +12,14 @@ interface StatusBadgeProps {
 function getLabel(status: Status, dueDate?: Date): string {
   if (status === "overdue") return "Overdue";
   if (status === "completed") return "Done";
-  if (status === "due") return "Due";
 
-  // upcoming (30+ days) — show "Month · X days"
-  if (status === "upcoming" && dueDate) {
+  if (dueDate) {
     const days = differenceInDays(dueDate, new Date());
-    return `${format(dueDate, "MMM")} · ${days}d`;
+    if (days <= 30) return `Due soon · ${days}d`;
+    return `Due · ${format(dueDate, "MMM")} · ${days}d`;
   }
 
-  return "Upcoming";
+  return status === "due" ? "Due soon" : "Due";
 }
 
 const styleMap: Record<Status, { bgClass: string; textClass: string }> = {
