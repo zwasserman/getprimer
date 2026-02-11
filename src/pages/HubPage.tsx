@@ -4,7 +4,9 @@ import { motion } from "framer-motion";
 import { User, Flame, Droplets, Shield, Zap, CheckCircle, ChevronRight } from "lucide-react";
 import StatusBadge, { type Status } from "@/components/StatusBadge";
 import TaskChatModal, { type TaskForModal } from "@/components/TaskChatModal";
+import ProCategorySheet from "@/components/ProCategorySheet";
 import { differenceInDays, format } from "date-fns";
+import { mockPros, categories, categoryIcons, type Category } from "@/data/pros";
 
 function computeStatus(dueDate: Date): Status {
   const days = differenceInDays(dueDate, new Date());
@@ -39,9 +41,21 @@ const recentActivity = [
   { title: "Checked water pressure", time: "1 week ago" },
 ];
 
+const activeCategories = categories.filter((cat) =>
+  mockPros.some((p) => p.category === cat)
+);
+
 const HubPage = () => {
   const navigate = useNavigate();
   const [selectedTask, setSelectedTask] = useState<TaskForModal | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+
+  const hasAgentRec = (cat: Category) =>
+    mockPros.some((p) => p.category === cat && p.referral.type === "agent");
+
+  const sheetPros = selectedCategory
+    ? mockPros.filter((p) => p.category === selectedCategory)
+    : [];
 
   return (
     <motion.div
@@ -100,6 +114,40 @@ const HubPage = () => {
         </section>
       )}
 
+      {/* Your Pros */}
+      <section className="mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-h3 text-foreground">Your Pros</h2>
+          <button
+            onClick={() => navigate("/pros")}
+            className="text-caption font-medium text-secondary"
+          >
+            See all →
+          </button>
+        </div>
+        <div className="flex gap-4 overflow-x-auto -mx-4 px-4 pb-2 scrollbar-hide">
+          {activeCategories.map((cat) => {
+            const Icon = categoryIcons[cat];
+            const showDot = hasAgentRec(cat);
+            return (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className="flex flex-col items-center gap-1.5 flex-shrink-0"
+              >
+                <div className="relative w-16 h-16 rounded-2xl bg-background border border-border flex items-center justify-center">
+                  <Icon size={24} className="text-foreground" />
+                  {showDot && (
+                    <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-secondary" />
+                  )}
+                </div>
+                <span className="text-caption text-foreground">{cat}</span>
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
       {/* Recent Activity */}
       <section className="mb-8">
         <h2 className="text-h3 text-foreground mb-4">Recent Activity</h2>
@@ -118,6 +166,13 @@ const HubPage = () => {
         task={selectedTask}
         open={!!selectedTask}
         onClose={() => setSelectedTask(null)}
+      />
+
+      <ProCategorySheet
+        category={selectedCategory}
+        pros={sheetPros}
+        open={!!selectedCategory}
+        onClose={() => setSelectedCategory(null)}
       />
     </motion.div>
   );
