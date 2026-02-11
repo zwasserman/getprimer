@@ -71,36 +71,6 @@ const TasksPage = () => {
     <div className="flex flex-col min-h-screen px-4 pt-14 pb-32">
       <h1 className="text-h1 text-foreground mb-6">Tasks</h1>
 
-      {/* Priority Carousel */}
-      {priorityTasks.length > 0 && (
-        <section className="mb-6">
-          <h2 className="text-h3 text-foreground mb-3">Priority</h2>
-          <div className="flex gap-3 overflow-x-auto -mx-4 px-4 pb-2 scrollbar-hide">
-            {priorityTasks.map((task) => {
-              const Icon = task.icon;
-              return (
-                <motion.button
-                  key={task.id}
-                  whileTap={{ scale: 0.97 }}
-                  onClick={() => openTask(task)}
-                  className="card-primer flex-shrink-0 w-[190px] h-[140px] flex flex-col justify-between text-left"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="w-9 h-9 rounded-xl bg-secondary/10 flex items-center justify-center">
-                      <Icon size={18} className="text-secondary" />
-                    </div>
-                    <StatusBadge status={task.status} dueDate={task.dueDate} />
-                  </div>
-                  <div>
-                    <p className="text-body-small font-semibold text-foreground">{task.title}</p>
-                    <p className="text-caption text-muted-foreground mt-1">{formatDueLabel(task.dueDate, task.status)}</p>
-                  </div>
-                </motion.button>
-              );
-            })}
-          </div>
-        </section>
-      )}
 
       {/* Filters */}
       <div className="flex gap-2 mb-5 overflow-x-auto scrollbar-hide">
