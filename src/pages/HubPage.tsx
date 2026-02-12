@@ -107,21 +107,10 @@ const HubPage = () => {
         </div>
       </div>
 
-      {/* Context line */}
-      {isNewUser ? (
-        <p className="text-body-small text-muted-foreground mb-6">
-          You have {totalIncomplete} things to check on.{"\n"}Let's start with the essentials.
-        </p>
-      ) : (
-        progressLine && (
-          <p className="text-body-small text-muted-foreground mb-6">{progressLine}</p>
-        )
-      )}
-
       {/* Ask Primer */}
       <button
         onClick={() => window.dispatchEvent(new CustomEvent("open-chat"))}
-        className="w-full mb-6 flex items-center gap-3 rounded-2xl bg-card border border-border px-4 py-3.5 shadow-card text-left transition-all active:scale-[0.98]"
+        className="w-full mb-4 flex items-center gap-3 rounded-2xl bg-card border border-border px-4 py-3.5 shadow-card text-left transition-all active:scale-[0.98]"
       >
         <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
           <MessageCircle size={20} className="text-primary" />
@@ -132,6 +121,17 @@ const HubPage = () => {
         </div>
         <ChevronRight size={16} className="text-muted-foreground flex-shrink-0" />
       </button>
+
+      {/* Context line */}
+      {isNewUser ? (
+        <p className="text-body-small text-muted-foreground mb-6">
+          You have {totalIncomplete} things to check on.{"\n"}Let's start with the essentials.
+        </p>
+      ) : (
+        progressLine && (
+          <p className="text-body-small text-muted-foreground mb-6">{progressLine}</p>
+        )
+      )}
 
       {/* Priority Tasks — timeline cards */}
       <section className="mb-6">
