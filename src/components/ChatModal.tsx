@@ -296,20 +296,20 @@ const ChatModal = ({ open, onClose }: ChatModalProps) => {
               </div>
 
               {/* Historical chats list */}
-              {history.length > 0 && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.5, duration: 0.4 }}
-                  className="pb-6"
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5, duration: 0.4 }}
+                className="pb-6"
+              >
+                <button
+                  onClick={() => setView("history")}
+                  className="flex items-center justify-between w-full mb-3"
                 >
-                  <button
-                    onClick={() => setView("history")}
-                    className="flex items-center justify-between w-full mb-3"
-                  >
-                    <span className="text-caption font-medium text-muted-foreground uppercase tracking-wider">Recent Chats</span>
-                    <ChevronRight size={16} className="text-muted-foreground" />
-                  </button>
+                  <span className="text-caption font-medium text-muted-foreground uppercase tracking-wider">Recent Chats</span>
+                  <ChevronRight size={16} className="text-muted-foreground" />
+                </button>
+                {history.length > 0 ? (
                   <div className="flex flex-col divide-y divide-border/50">
                     {history.slice(0, 3).map((chat) => (
                       <button
@@ -322,8 +322,10 @@ const ChatModal = ({ open, onClose }: ChatModalProps) => {
                       </button>
                     ))}
                   </div>
-                </motion.div>
-              )}
+                ) : (
+                  <p className="text-caption text-muted-foreground py-3">No conversations yet. Start chatting!</p>
+                )}
+              </motion.div>
             </div>
           )}
 
