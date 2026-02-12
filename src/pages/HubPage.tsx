@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { User, CheckCircle2, ChevronRight, Circle, MessageCircle, BookOpen } from "lucide-react";
+import { User, CheckCircle2, ChevronRight, Circle, MessageCircle, BookOpen, Sparkles } from "lucide-react";
 import StatusBadge, { type Status } from "@/components/StatusBadge";
 import TaskChatModal, { type TaskForModal } from "@/components/TaskChatModal";
 import ProCategorySheet from "@/components/ProCategorySheet";
@@ -110,16 +110,18 @@ const HubPage = () => {
       {/* Ask Primer */}
       <button
         onClick={() => window.dispatchEvent(new CustomEvent("open-chat"))}
-        className="w-full mb-4 flex items-center gap-3 rounded-2xl bg-card border border-border px-4 py-3.5 shadow-card text-left transition-all active:scale-[0.98]"
+        className="w-full mb-4 flex items-center gap-3 rounded-2xl bg-gradient-to-r from-primary/10 to-secondary/10 border border-primary/20 px-4 py-3.5 text-left transition-all active:scale-[0.98]"
       >
-        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-          <MessageCircle size={20} className="text-primary" />
+        <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center flex-shrink-0">
+          <Sparkles size={20} className="text-primary" />
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-body-small font-semibold text-foreground">Ask Primer</p>
-          <p className="text-caption text-muted-foreground">Your home maintenance assistant</p>
+          <p className="text-caption text-muted-foreground">AI-powered home assistant</p>
         </div>
-        <ChevronRight size={16} className="text-muted-foreground flex-shrink-0" />
+        <div className="px-3 py-1 rounded-full bg-primary/10 text-caption font-medium text-primary flex-shrink-0">
+          Chat
+        </div>
       </button>
 
       {/* Context line */}
