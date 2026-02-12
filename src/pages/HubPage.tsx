@@ -85,7 +85,7 @@ const HubPage = () => {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex flex-col min-h-screen px-4 pt-14 pb-32"
+      className="flex flex-col min-h-screen px-4 pt-14 pb-32 lg:pt-8 lg:pb-8 lg:px-8"
     >
       {/* Header */}
       <div className="flex items-start justify-between mb-2">

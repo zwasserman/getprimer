@@ -142,7 +142,7 @@ const TasksPage = () => {
 
   if (loading) {
     return (
-      <div className="flex flex-col min-h-screen px-4 pt-14 pb-32 items-center justify-center">
+      <div className="flex flex-col min-h-screen px-4 pt-14 pb-32 items-center justify-center lg:pt-8 lg:pb-8 lg:px-8">
         <Loader2 size={32} className="animate-spin text-primary mb-4" />
         <p className="text-muted-foreground">Loading tasks...</p>
       </div>
@@ -151,14 +151,14 @@ const TasksPage = () => {
 
   if (error) {
     return (
-      <div className="flex flex-col min-h-screen px-4 pt-14 pb-32 items-center justify-center">
+      <div className="flex flex-col min-h-screen px-4 pt-14 pb-32 items-center justify-center lg:pt-8 lg:pb-8 lg:px-8">
         <p className="text-muted-foreground text-center">{error}</p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col min-h-screen px-4 pt-14 pb-32">
+    <div className="flex flex-col min-h-screen px-4 pt-14 pb-32 lg:pt-8 lg:pb-8 lg:px-8">
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <h1 className="text-h1 text-foreground">Tasks</h1>

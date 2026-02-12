@@ -28,11 +28,12 @@ const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
 interface ChatModalProps {
   open: boolean;
   onClose: () => void;
+  isEmbedded?: boolean;
 }
 
 type View = "landing" | "chat" | "history";
 
-const ChatModal = ({ open, onClose }: ChatModalProps) => {
+const ChatModal = ({ open, onClose, isEmbedded = false }: ChatModalProps) => {
   const [view, setView] = useState<View>("landing");
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -207,6 +208,126 @@ const ChatModal = ({ open, onClose }: ChatModalProps) => {
     if (diffDays === 1) return "Yesterday";
     return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   };
+
+  if (isEmbedded) {
+    return (
+      <div className="flex flex-col h-screen bg-background max-w-[700px] mx-auto w-full">
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 pt-5 pb-3">
+          <span className="text-body-small font-medium text-foreground">
+            {view === "history" ? "Chat History" : "Primer"}
+          </span>
+          {view === "chat" ? (
+            <button onClick={startNewChat} className="text-muted-foreground hover:text-foreground transition-colors p-1">
+              <Plus size={20} />
+            </button>
+          ) : view === "history" ? (
+            <button onClick={() => setView("landing")} className="text-caption font-medium text-primary">Back</button>
+          ) : (
+            <div className="w-8" />
+          )}
+        </div>
+
+        {/* Landing View */}
+        {view === "landing" && (
+          <div className="flex-1 flex flex-col px-4">
+            <div className="flex-1 flex flex-col items-center justify-center text-center px-4">
+              <Sparkles size={36} className="text-primary mb-5" />
+              <h2 className="text-h1 text-foreground">{getGreeting()}!</h2>
+              <p className="text-body text-muted-foreground mt-2 mb-5">Ask me anything about your home.</p>
+              <div className="flex flex-wrap justify-center gap-2 mb-6">
+                {["What's due this week?", "Help me winterize", "DIY vs. call a pro?", "Seasonal checklist"].map((chip) => (
+                  <button key={chip} onClick={() => sendMessage(chip)} className="px-3.5 py-1.5 rounded-full border border-border bg-card text-caption font-medium text-foreground hover:bg-muted transition-colors shadow-sm">
+                    {chip}
+                  </button>
+                ))}
+              </div>
+              <div className="w-full max-w-sm">
+                <div className="flex items-center gap-2 bg-card rounded-full shadow-elevated px-4 py-2.5 border border-border/50">
+                  <input ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendMessage(input)} placeholder="Ask about your home..." className="flex-1 bg-transparent outline-none text-body text-foreground placeholder:text-muted-foreground" />
+                  <button onClick={() => sendMessage(input)} className="bg-primary text-primary-foreground rounded-full p-1.5 hover:bg-primary/90 transition-colors" aria-label="Send"><Send size={16} /></button>
+                </div>
+              </div>
+            </div>
+            <div className="pb-6">
+              <button onClick={() => setView("history")} className="flex items-center justify-between w-full mb-3">
+                <span className="text-caption font-medium text-muted-foreground uppercase tracking-wider">Recent Chats</span>
+                <ChevronRight size={16} className="text-muted-foreground" />
+              </button>
+              {history.length > 0 ? (
+                <div className="flex flex-col divide-y divide-border/50">
+                  {history.slice(0, 3).map((chat) => (
+                    <button key={chat.id} onClick={() => loadConversation(chat.id)} className="flex items-center justify-between py-3 text-left hover:bg-card/50 transition-colors -mx-2 px-2 rounded-lg">
+                      <p className="text-body-small font-medium text-foreground truncate flex-1 mr-3">{chat.title}</p>
+                      <span className="text-caption text-muted-foreground flex-shrink-0">{formatDate(chat.updated_at)}</span>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-caption text-muted-foreground py-3">No conversations yet. Start chatting!</p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* History View */}
+        {view === "history" && (
+          <div className="flex-1 overflow-y-auto px-4">
+            <div className="flex flex-col divide-y divide-border/50">
+              {history.map((chat) => (
+                <button key={chat.id} onClick={() => loadConversation(chat.id)} className="flex items-center justify-between py-4 text-left hover:bg-card/50 transition-colors -mx-2 px-2 rounded-lg">
+                  <p className="text-body-small font-medium text-foreground truncate flex-1 mr-3">{chat.title}</p>
+                  <span className="text-caption text-muted-foreground flex-shrink-0">{formatDate(chat.updated_at)}</span>
+                </button>
+              ))}
+              {history.length === 0 && <p className="text-body text-muted-foreground text-center py-12">No chats yet</p>}
+            </div>
+          </div>
+        )}
+
+        {/* Chat View */}
+        {view === "chat" && (
+          <>
+            <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 pb-4">
+              <div className="flex flex-col gap-4 pt-2">
+                {messages.map((msg, i) => (
+                  <div key={msg.id}>
+                    {msg.type === "system" && (
+                      <div className="flex justify-start">
+                        <div className="bg-card rounded-2xl rounded-bl-md px-4 py-3 max-w-[80%] shadow-card border border-border/50">
+                          <p className="text-body-small text-foreground whitespace-pre-wrap">{msg.content}</p>
+                        </div>
+                      </div>
+                    )}
+                    {msg.type === "user" && (
+                      <div className="flex justify-end">
+                        <div className="bg-primary text-primary-foreground rounded-2xl rounded-br-md px-4 py-3 max-w-[80%]">
+                          <p className="text-body-small">{msg.content}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+                {streaming && (
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Loader2 size={16} className="animate-spin" />
+                    <span className="text-caption">Thinking...</span>
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="px-4 pb-4 pt-2 bg-background">
+              <div className="flex items-center gap-2 bg-card rounded-full shadow-elevated px-4 py-2 border border-border/50">
+                <input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendMessage(input)} placeholder="Ask about your home..." disabled={streaming} className="flex-1 bg-transparent outline-none text-body text-foreground placeholder:text-muted-foreground disabled:opacity-50" />
+                <button className="text-muted-foreground hover:text-foreground transition-colors p-1" aria-label="Voice input"><Mic size={20} /></button>
+                <button onClick={() => sendMessage(input)} disabled={streaming} className="bg-primary text-primary-foreground rounded-full p-1.5 hover:bg-primary/90 transition-colors disabled:opacity-50" aria-label="Send"><Send size={16} /></button>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    );
+  }
 
   return (
     <AnimatePresence>
