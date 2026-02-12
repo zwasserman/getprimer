@@ -88,7 +88,7 @@ function AddProModal({ open, onClose }: { open: boolean; onClose: () => void }) 
 
 function ProCard({ pro, onSelect }: { pro: Pro; onSelect: (pro: Pro) => void }) {
   return (
-    <button onClick={() => onSelect(pro)} className="text-left card-primer flex flex-col gap-3 hover:bg-muted/50 transition-colors">
+    <button onClick={() => onSelect(pro)} className="text-left card-primer flex flex-col gap-3">
       <div>
         <h3 className="text-h3 text-foreground">{pro.business}</h3>
         <p className="text-body-small text-muted-foreground">{pro.contact}</p>
