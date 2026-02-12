@@ -72,7 +72,7 @@ const HubPage = () => {
           <MessageCircle size={20} className="text-primary" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-body-small font-semibold text-foreground">Ask Mira anything</p>
+          <p className="text-body-small font-semibold text-foreground">Ask Primer</p>
           <p className="text-caption text-muted-foreground">Your home maintenance assistant</p>
         </div>
         <ChevronRight size={16} className="text-muted-foreground flex-shrink-0" />
