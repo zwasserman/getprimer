@@ -148,10 +148,12 @@ const ProsPage = () => {
   const [activeFilter, setActiveFilter] = useState("All");
   const [addOpen, setAddOpen] = useState(false);
   const [selectedPro, setSelectedPro] = useState<Pro | null>(null);
+  const [removedIds, setRemovedIds] = useState<number[]>([]);
 
+  const allPros = mockPros.filter((p) => !removedIds.includes(p.id));
   const filtered = activeFilter === "All"
-    ? mockPros
-    : mockPros.filter((p) => p.category === activeFilter);
+    ? allPros
+    : allPros.filter((p) => p.category === activeFilter);
 
   const grouped = categories
     .map((cat) => ({ cat, pros: filtered.filter((p) => p.category === cat) }))
@@ -219,7 +221,7 @@ const ProsPage = () => {
       )}
 
       <AddProModal open={addOpen} onClose={() => setAddOpen(false)} />
-      <ProDetailSheet pro={selectedPro} open={!!selectedPro} onClose={() => setSelectedPro(null)} />
+      <ProDetailSheet pro={selectedPro} open={!!selectedPro} onClose={() => setSelectedPro(null)} onRemove={(id) => setRemovedIds((prev) => [...prev, id])} />
     </div>
   );
 };
