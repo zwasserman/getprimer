@@ -35,9 +35,74 @@ export type Database = {
         }
         Relationships: []
       }
+      home_documents: {
+        Row: {
+          appliance_name: string | null
+          category: string
+          created_at: string
+          description: string | null
+          expiration_date: string | null
+          file_size: number | null
+          file_type: string
+          file_url: string
+          home_id: string
+          id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          appliance_name?: string | null
+          category: string
+          created_at?: string
+          description?: string | null
+          expiration_date?: string | null
+          file_size?: number | null
+          file_type: string
+          file_url: string
+          home_id: string
+          id?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          appliance_name?: string | null
+          category?: string
+          created_at?: string
+          description?: string | null
+          expiration_date?: string | null
+          file_size?: number | null
+          file_type?: string
+          file_url?: string
+          home_id?: string
+          id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "home_documents_home_id_fkey"
+            columns: ["home_id"]
+            isOneToOne: false
+            referencedRelation: "home_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       home_profiles: {
         Row: {
+          address_line: string | null
+          bathrooms: number | null
+          bedrooms: number | null
+          city: string | null
+          climate_zone: string | null
+          cooling_type: string | null
           created_at: string
+          data_source: string | null
+          electrical_panel_amps: number | null
+          enriched_at: string | null
+          enrichment_raw: Json | null
+          exterior_type: string | null
+          foundation_type: string | null
           has_basement: boolean
           has_ceiling_fans: boolean
           has_central_ac: boolean
@@ -48,32 +113,88 @@ export type Database = {
           has_gas: boolean
           has_hoa: boolean
           has_lawn: boolean
+          has_pool: boolean | null
           has_septic: boolean
           has_sprinkler_system: boolean
+          has_sump_pump: boolean | null
+          heating_type: string | null
           id: string
+          last_sale_date: string | null
+          last_sale_price: number | null
+          last_updated_by: string | null
+          lot_size: number | null
+          property_type: string | null
+          roof_age: number | null
+          roof_type: string | null
+          square_footage: number | null
+          state: string | null
           stories: number
           updated_at: string
+          water_heater_age: number | null
+          water_heater_type: string | null
+          year_built: number | null
+          zip: string | null
         }
         Insert: {
+          address_line?: string | null
+          bathrooms?: number | null
+          bedrooms?: number | null
+          city?: string | null
+          climate_zone?: string | null
+          cooling_type?: string | null
           created_at?: string
-          has_basement?: boolean
-          has_ceiling_fans?: boolean
-          has_central_ac?: boolean
-          has_deck?: boolean
-          has_fireplace?: boolean
-          has_furnace_humidifier?: boolean
-          has_garage?: boolean
-          has_gas?: boolean
-          has_hoa?: boolean
-          has_lawn?: boolean
-          has_septic?: boolean
-          has_sprinkler_system?: boolean
+          data_source?: string | null
+          electrical_panel_amps?: number | null
+          enriched_at?: string | null
+          enrichment_raw?: Json | null
+          exterior_type?: string | null
+          foundation_type?: string | null
+          has_basement: boolean
+          has_ceiling_fans: boolean
+          has_central_ac: boolean
+          has_deck: boolean
+          has_fireplace: boolean
+          has_furnace_humidifier: boolean
+          has_garage: boolean
+          has_gas: boolean
+          has_hoa: boolean
+          has_lawn: boolean
+          has_pool?: boolean | null
+          has_septic: boolean
+          has_sprinkler_system: boolean
+          has_sump_pump?: boolean | null
+          heating_type?: string | null
           id?: string
+          last_sale_date?: string | null
+          last_sale_price?: number | null
+          last_updated_by?: string | null
+          lot_size?: number | null
+          property_type?: string | null
+          roof_age?: number | null
+          roof_type?: string | null
+          square_footage?: number | null
+          state?: string | null
           stories?: number
           updated_at?: string
+          water_heater_age?: number | null
+          water_heater_type?: string | null
+          year_built?: number | null
+          zip?: string | null
         }
         Update: {
+          address_line?: string | null
+          bathrooms?: number | null
+          bedrooms?: number | null
+          city?: string | null
+          climate_zone?: string | null
+          cooling_type?: string | null
           created_at?: string
+          data_source?: string | null
+          electrical_panel_amps?: number | null
+          enriched_at?: string | null
+          enrichment_raw?: Json | null
+          exterior_type?: string | null
+          foundation_type?: string | null
           has_basement?: boolean
           has_ceiling_fans?: boolean
           has_central_ac?: boolean
@@ -84,11 +205,27 @@ export type Database = {
           has_gas?: boolean
           has_hoa?: boolean
           has_lawn?: boolean
+          has_pool?: boolean | null
           has_septic?: boolean
           has_sprinkler_system?: boolean
+          has_sump_pump?: boolean | null
+          heating_type?: string | null
           id?: string
+          last_sale_date?: string | null
+          last_sale_price?: number | null
+          last_updated_by?: string | null
+          lot_size?: number | null
+          property_type?: string | null
+          roof_age?: number | null
+          roof_type?: string | null
+          square_footage?: number | null
+          state?: string | null
           stories?: number
           updated_at?: string
+          water_heater_age?: number | null
+          water_heater_type?: string | null
+          year_built?: number | null
+          zip?: string | null
         }
         Relationships: []
       }
