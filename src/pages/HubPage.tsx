@@ -127,15 +127,11 @@ const HubPage = () => {
         <p className="text-body-small text-muted-foreground mb-6">
           You have {totalIncomplete} things to check on.{"\n"}Let's start with the essentials.
         </p>
-      ) : (
-        progressLine && (
-          <p className="text-body-small text-muted-foreground mb-6">{progressLine}</p>
-        )
-      )}
+      ) : null}
 
       {/* Priority Tasks — timeline cards */}
       <section className="mb-6">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-2">
           <h2 className="text-h3 text-foreground">Priority tasks</h2>
           <button
             onClick={() => navigate("/tasks")}
@@ -145,6 +141,9 @@ const HubPage = () => {
             <ChevronRight size={14} />
           </button>
         </div>
+        {progressLine && (
+          <p className="text-body-small text-muted-foreground mb-4">{progressLine}</p>
+        )}
 
         {loading ? (
           <div className="py-8 text-center text-muted-foreground text-body-small">Loading...</div>
