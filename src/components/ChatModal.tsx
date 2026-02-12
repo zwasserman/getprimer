@@ -296,7 +296,11 @@ const ChatModal = ({ open, onClose }: ChatModalProps) => {
                   transition={{ delay: i * 0.05 }}
                 >
                   {msg.type === "system" && (
-                    <p className="text-body text-foreground max-w-[90%] whitespace-pre-wrap">{msg.content}</p>
+                    <div className="flex justify-start">
+                      <div className="bg-card rounded-2xl rounded-bl-md px-4 py-3 max-w-[80%] shadow-card border border-border/50">
+                        <p className="text-body-small text-foreground whitespace-pre-wrap">{msg.content}</p>
+                      </div>
+                    </div>
                   )}
 
                   {msg.type === "walkthrough-step" && msg.stepIndex != null && (
