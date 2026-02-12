@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { User, CheckCircle, ChevronRight, Circle } from "lucide-react";
+import { User, CheckCircle, ChevronRight, Circle, MessageCircle } from "lucide-react";
 import StatusBadge, { type Status } from "@/components/StatusBadge";
 import TaskChatModal, { type TaskForModal } from "@/components/TaskChatModal";
 import ProCategorySheet from "@/components/ProCategorySheet";
@@ -59,6 +59,24 @@ const HubPage = () => {
           <User size={20} className="text-primary" />
         </div>
       </div>
+
+      {/* AI Assistant Entry */}
+      <button
+        onClick={() => {
+          const event = new CustomEvent("open-chat");
+          window.dispatchEvent(event);
+        }}
+        className="w-full mb-8 flex items-center gap-3 rounded-2xl bg-card border border-border px-4 py-3.5 shadow-card text-left transition-all active:scale-[0.98]"
+      >
+        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+          <MessageCircle size={20} className="text-primary" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-body-small font-semibold text-foreground">Ask Mira anything</p>
+          <p className="text-caption text-muted-foreground">Your home maintenance assistant</p>
+        </div>
+        <ChevronRight size={16} className="text-muted-foreground flex-shrink-0" />
+      </button>
 
       {/* Priority Tasks — stacked timeline */}
       <section className="mb-8">
