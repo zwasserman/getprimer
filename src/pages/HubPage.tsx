@@ -195,7 +195,6 @@ const HubPage = () => {
                         <p className="text-body-small font-semibold text-foreground">{task.title}</p>
                         <p className="text-caption text-muted-foreground mt-1">
                           {getMissionIcon(task.mission)} {getMissionShortLabel(task.mission)} • {task.category}
-                          {task.difficulty && ` • ${task.difficulty}`}
                         </p>
                       </div>
                       <StatusBadge status={getBadgeStatus(task)} dueDate={task.nextDueAt || undefined} />
