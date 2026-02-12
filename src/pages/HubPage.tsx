@@ -9,7 +9,7 @@ import { mockPros, categories, categoryIcons, type Category } from "@/data/pros"
 import { useHomeTasks, type SurfacedTask } from "@/hooks/useHomeTasks";
 import { TIER_META, TIER_ORDER, getMissionIcon, getMissionShortLabel, MISSION_ORDER } from "@/lib/missions";
 
-const TIER_LIMITS: Record<string, number> = { T1: 99, T2: 5, T3: 3, T4: 0 };
+const HOME_TASK_LIMIT = 4;
 
 const activeCategories = categories.filter((cat) =>
   mockPros.some((p) => p.category === cat)
@@ -133,89 +133,80 @@ const HubPage = () => {
         <ChevronRight size={16} className="text-muted-foreground flex-shrink-0" />
       </button>
 
-      {/* Task tiers */}
-      {loading ? (
-        <div className="py-8 text-center text-muted-foreground text-body-small">Loading...</div>
-      ) : (
-        <div className="flex flex-col gap-6">
-          {TIER_ORDER.filter((tier) => tier !== "T4").map((tier) => {
-            const tierTasks = tasksByTier[tier];
-            if (tierTasks.length === 0) return null;
-
-            const limit = TIER_LIMITS[tier];
-            const displayed = tierTasks.slice(0, limit);
-            const remaining = tierTasks.length - displayed.length;
-            const meta = TIER_META[tier];
-
-            return (
-              <section key={tier}>
-                {/* Tier Header */}
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-caption uppercase tracking-[1px] text-muted-foreground">
-                    {meta.displayName}
-                  </span>
-                  <span className="text-caption text-muted-foreground">
-                    {tierTasks.length} left
-                  </span>
-                </div>
-
-                {/* Task Cards */}
-                <div className="flex flex-col gap-3">
-                  {displayed.map((task) => {
-                    const isInfo = task.task_type === "info";
-
-                    return (
-                      <motion.button
-                        key={task.id}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => openTask(task)}
-                        className="card-primer text-left"
-                      >
-                        <div className="flex items-start gap-3">
-                          {isInfo ? (
-                            <BookOpen size={20} className="text-secondary flex-shrink-0 mt-0.5" />
-                          ) : (
-                            <motion.div
-                              whileTap={{ scale: 0.85 }}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                completeTask(task.id);
-                              }}
-                              className="flex-shrink-0 mt-0.5"
-                            >
-                              <Circle size={22} className="text-muted-foreground/40" />
-                            </motion.div>
-                          )}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between gap-2">
-                              <p className="text-body font-medium text-foreground truncate">{task.title}</p>
-                              <StatusBadge status={getBadgeStatus(task)} dueDate={task.nextDueAt || undefined} />
-                            </div>
-                            <p className="text-body-small text-muted-foreground mt-0.5">
-                              {getMissionIcon(task.mission)} {getMissionShortLabel(task.mission)} • {task.category}
-                              {task.difficulty && ` • ${task.difficulty}`}
-                            </p>
-                          </div>
-                        </div>
-                      </motion.button>
-                    );
-                  })}
-                </div>
-
-                {/* View all link */}
-                {remaining > 0 && (
-                  <button
-                    onClick={() => navigate("/tasks")}
-                    className="text-body-small font-medium text-primary mt-3 text-left"
-                  >
-                    View all {tierTasks.length} {meta.displayName.toLowerCase()} tasks →
-                  </button>
-                )}
-              </section>
-            );
-          })}
+      {/* Priority Tasks — timeline cards */}
+      <section className="mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-h3 text-foreground">Priority tasks</h2>
+          <button
+            onClick={() => navigate("/tasks")}
+            className="flex items-center gap-1 text-caption font-medium text-primary"
+          >
+            See all tasks
+            <ChevronRight size={14} />
+          </button>
         </div>
-      )}
+
+        {loading ? (
+          <div className="py-8 text-center text-muted-foreground text-body-small">Loading...</div>
+        ) : incompleteTasks.length === 0 ? (
+          <div className="card-primer text-center py-6">
+            <p className="text-body-small text-muted-foreground">You're all caught up 🎉</p>
+          </div>
+        ) : (
+          <div className="relative flex flex-col">
+            {/* Dashed timeline connector */}
+            <div
+              className="absolute left-[11px] top-4 bottom-4 w-px border-l-2 border-dashed border-border"
+              aria-hidden
+            />
+
+            {incompleteTasks.slice(0, HOME_TASK_LIMIT).map((task) => {
+              const isInfo = task.task_type === "info";
+
+              return (
+                <div key={task.id} className="relative flex gap-4 items-start">
+                  {/* Status dot */}
+                  <motion.button
+                    whileTap={{ scale: 0.8 }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (!isInfo) completeTask(task.id);
+                    }}
+                    className="relative z-10 mt-5 flex-shrink-0"
+                    aria-label="Mark complete"
+                  >
+                    <div className={`w-[22px] h-[22px] rounded-full flex items-center justify-center ${
+                      task.status === "overdue" ? "bg-destructive" :
+                      task.status === "due" ? "bg-warning" :
+                      "bg-muted-foreground/30"
+                    }`}>
+                      <Circle size={10} className="text-primary-foreground fill-current" />
+                    </div>
+                  </motion.button>
+
+                  {/* Card */}
+                  <motion.button
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => openTask(task)}
+                    className="card-primer flex-1 mb-3 text-left"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-body-small font-semibold text-foreground">{task.title}</p>
+                        <p className="text-caption text-muted-foreground mt-1">
+                          {getMissionIcon(task.mission)} {getMissionShortLabel(task.mission)} • {task.category}
+                          {task.difficulty && ` • ${task.difficulty}`}
+                        </p>
+                      </div>
+                      <StatusBadge status={getBadgeStatus(task)} dueDate={task.nextDueAt || undefined} />
+                    </div>
+                  </motion.button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
 
       {/* Recent Activity */}
       {recentCompleted.length > 0 && (
