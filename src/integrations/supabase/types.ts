@@ -20,24 +20,95 @@ export type Database = {
           id: string
           title: string
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
           id?: string
           title?: string
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
           id?: string
           title?: string
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }
+      home_documents: {
+        Row: {
+          appliance_name: string | null
+          category: string
+          created_at: string
+          description: string | null
+          expiration_date: string | null
+          file_size: number | null
+          file_type: string
+          file_url: string
+          home_id: string
+          id: string
+          title: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          appliance_name?: string | null
+          category: string
+          created_at?: string
+          description?: string | null
+          expiration_date?: string | null
+          file_size?: number | null
+          file_type: string
+          file_url: string
+          home_id: string
+          id?: string
+          title: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          appliance_name?: string | null
+          category?: string
+          created_at?: string
+          description?: string | null
+          expiration_date?: string | null
+          file_size?: number | null
+          file_type?: string
+          file_url?: string
+          home_id?: string
+          id?: string
+          title?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "home_documents_home_id_fkey"
+            columns: ["home_id"]
+            isOneToOne: false
+            referencedRelation: "home_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       home_profiles: {
         Row: {
+          address_line: string | null
+          bathrooms: number | null
+          bedrooms: number | null
+          city: string | null
+          climate_zone: string | null
+          cooling_type: string | null
           created_at: string
+          data_source: string | null
+          electrical_panel_amps: number | null
+          enriched_at: string | null
+          enrichment_raw: Json | null
+          exterior_type: string | null
+          foundation_type: string | null
           has_basement: boolean
           has_ceiling_fans: boolean
           has_central_ac: boolean
@@ -48,32 +119,90 @@ export type Database = {
           has_gas: boolean
           has_hoa: boolean
           has_lawn: boolean
+          has_pool: boolean | null
           has_septic: boolean
           has_sprinkler_system: boolean
+          has_sump_pump: boolean | null
+          heating_type: string | null
           id: string
+          last_sale_date: string | null
+          last_sale_price: number | null
+          last_updated_by: string | null
+          lot_size: number | null
+          property_type: string | null
+          roof_age: number | null
+          roof_type: string | null
+          square_footage: number | null
+          state: string | null
           stories: number
           updated_at: string
+          user_id: string | null
+          water_heater_age: number | null
+          water_heater_type: string | null
+          year_built: number | null
+          zip: string | null
         }
         Insert: {
+          address_line?: string | null
+          bathrooms?: number | null
+          bedrooms?: number | null
+          city?: string | null
+          climate_zone?: string | null
+          cooling_type?: string | null
           created_at?: string
-          has_basement?: boolean
-          has_ceiling_fans?: boolean
-          has_central_ac?: boolean
-          has_deck?: boolean
-          has_fireplace?: boolean
-          has_furnace_humidifier?: boolean
-          has_garage?: boolean
-          has_gas?: boolean
-          has_hoa?: boolean
-          has_lawn?: boolean
-          has_septic?: boolean
-          has_sprinkler_system?: boolean
+          data_source?: string | null
+          electrical_panel_amps?: number | null
+          enriched_at?: string | null
+          enrichment_raw?: Json | null
+          exterior_type?: string | null
+          foundation_type?: string | null
+          has_basement: boolean
+          has_ceiling_fans: boolean
+          has_central_ac: boolean
+          has_deck: boolean
+          has_fireplace: boolean
+          has_furnace_humidifier: boolean
+          has_garage: boolean
+          has_gas: boolean
+          has_hoa: boolean
+          has_lawn: boolean
+          has_pool?: boolean | null
+          has_septic: boolean
+          has_sprinkler_system: boolean
+          has_sump_pump?: boolean | null
+          heating_type?: string | null
           id?: string
+          last_sale_date?: string | null
+          last_sale_price?: number | null
+          last_updated_by?: string | null
+          lot_size?: number | null
+          property_type?: string | null
+          roof_age?: number | null
+          roof_type?: string | null
+          square_footage?: number | null
+          state?: string | null
           stories?: number
           updated_at?: string
+          user_id?: string | null
+          water_heater_age?: number | null
+          water_heater_type?: string | null
+          year_built?: number | null
+          zip?: string | null
         }
         Update: {
+          address_line?: string | null
+          bathrooms?: number | null
+          bedrooms?: number | null
+          city?: string | null
+          climate_zone?: string | null
+          cooling_type?: string | null
           created_at?: string
+          data_source?: string | null
+          electrical_panel_amps?: number | null
+          enriched_at?: string | null
+          enrichment_raw?: Json | null
+          exterior_type?: string | null
+          foundation_type?: string | null
           has_basement?: boolean
           has_ceiling_fans?: boolean
           has_central_ac?: boolean
@@ -84,11 +213,28 @@ export type Database = {
           has_gas?: boolean
           has_hoa?: boolean
           has_lawn?: boolean
+          has_pool?: boolean | null
           has_septic?: boolean
           has_sprinkler_system?: boolean
+          has_sump_pump?: boolean | null
+          heating_type?: string | null
           id?: string
+          last_sale_date?: string | null
+          last_sale_price?: number | null
+          last_updated_by?: string | null
+          lot_size?: number | null
+          property_type?: string | null
+          roof_age?: number | null
+          roof_type?: string | null
+          square_footage?: number | null
+          state?: string | null
           stories?: number
           updated_at?: string
+          user_id?: string | null
+          water_heater_age?: number | null
+          water_heater_type?: string | null
+          year_built?: number | null
+          zip?: string | null
         }
         Relationships: []
       }
@@ -103,6 +249,7 @@ export type Database = {
           template_id: string
           updated_at: string
           urgency: string | null
+          user_id: string | null
         }
         Insert: {
           completed_at?: string | null
@@ -114,6 +261,7 @@ export type Database = {
           template_id: string
           updated_at?: string
           urgency?: string | null
+          user_id?: string | null
         }
         Update: {
           completed_at?: string | null
@@ -125,6 +273,7 @@ export type Database = {
           template_id?: string
           updated_at?: string
           urgency?: string | null
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -167,6 +316,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       task_templates: {
         Row: {
