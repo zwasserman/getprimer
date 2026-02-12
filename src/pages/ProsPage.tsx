@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Phone, Mail, Star, User, Plus, X } from "lucide-react";
+import { Phone, MessageSquare, UserPlus, Star, User, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -86,33 +86,49 @@ function AddProModal({ open, onClose }: { open: boolean; onClose: () => void }) 
 
 function ProCard({ pro }: { pro: Pro }) {
   return (
-    <div className="card-primer flex flex-col gap-2.5">
+    <div className="card-primer flex flex-col gap-3">
       <div>
         <h3 className="text-h3 text-foreground">{pro.business}</h3>
         <p className="text-body-small text-muted-foreground">{pro.contact}</p>
       </div>
-      <div className="flex flex-col gap-1.5">
-        <a href={`tel:${pro.phone}`} className="flex items-center gap-2 text-body-small text-foreground">
-          <Phone size={14} className="text-muted-foreground flex-shrink-0" />
-          {pro.phone}
-        </a>
-        <a href={`mailto:${pro.email}`} className="flex items-center gap-2 text-body-small text-foreground truncate">
-          <Mail size={14} className="text-muted-foreground flex-shrink-0" />
-          {pro.email}
-        </a>
-      </div>
-      <div className="flex items-center gap-1.5 pt-1 border-t border-border/50">
+
+      {/* Referral blurb or user badge */}
+      <div className="flex items-start gap-1.5">
         {pro.referral.type === "agent" ? (
           <>
-            <Star size={13} className="text-secondary flex-shrink-0" />
-            <span className="text-caption text-secondary">Recommended by {pro.referral.name}</span>
+            <Star size={13} className="text-secondary flex-shrink-0 mt-0.5" />
+            <div className="flex flex-col">
+              <span className="text-caption text-secondary font-medium">Recommended by {pro.referral.name}</span>
+              <span className="text-caption text-muted-foreground italic">"{pro.referral.blurb}"</span>
+            </div>
           </>
         ) : (
           <>
-            <User size={13} className="text-muted-foreground flex-shrink-0" />
+            <User size={13} className="text-muted-foreground flex-shrink-0 mt-0.5" />
             <span className="text-caption text-muted-foreground">Added by you</span>
           </>
         )}
+      </div>
+
+      {/* Quick action buttons */}
+      <div className="flex gap-2 pt-1 border-t border-border/50">
+        <a
+          href={`tel:${pro.phone}`}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted text-foreground text-caption font-medium hover:bg-muted/80 transition-colors"
+        >
+          <Phone size={13} /> Call
+        </a>
+        <a
+          href={`sms:${pro.phone}`}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted text-foreground text-caption font-medium hover:bg-muted/80 transition-colors"
+        >
+          <MessageSquare size={13} /> Text
+        </a>
+        <button
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted text-foreground text-caption font-medium hover:bg-muted/80 transition-colors"
+        >
+          <UserPlus size={13} /> Add Contact
+        </button>
       </div>
     </div>
   );
