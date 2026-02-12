@@ -263,10 +263,33 @@ const ChatModal = ({ open, onClose }: ChatModalProps) => {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.35, duration: 0.4 }}
-                  className="text-body text-muted-foreground mt-2 mb-8"
+                  className="text-body text-muted-foreground mt-2 mb-5"
                 >
                   Ask me anything about your home.
                 </motion.p>
+
+                {/* Quick-action chips */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4, duration: 0.4 }}
+                  className="flex flex-wrap justify-center gap-2 mb-6"
+                >
+                  {[
+                    "What's due this week?",
+                    "Help me winterize",
+                    "DIY vs. call a pro?",
+                    "Seasonal checklist",
+                  ].map((chip) => (
+                    <button
+                      key={chip}
+                      onClick={() => sendMessage(chip)}
+                      className="px-3.5 py-1.5 rounded-full border border-border bg-card text-caption font-medium text-foreground hover:bg-muted transition-colors shadow-sm"
+                    >
+                      {chip}
+                    </button>
+                  ))}
+                </motion.div>
 
                 {/* Input centered under copy */}
                 <motion.div
