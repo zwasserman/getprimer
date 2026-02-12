@@ -1,39 +1,12 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { User, Flame, Droplets, Shield, Zap, CheckCircle, ChevronRight } from "lucide-react";
+import { User, CheckCircle, ChevronRight, Circle } from "lucide-react";
 import StatusBadge, { type Status } from "@/components/StatusBadge";
 import TaskChatModal, { type TaskForModal } from "@/components/TaskChatModal";
 import ProCategorySheet from "@/components/ProCategorySheet";
-import { differenceInDays, format } from "date-fns";
 import { mockPros, categories, categoryIcons, type Category } from "@/data/pros";
-
-function computeStatus(dueDate: Date): Status {
-  const days = differenceInDays(dueDate, new Date());
-  if (days < 0) return "overdue";
-  if (days <= 30) return "due";
-  return "upcoming";
-}
-
-function formatDueLabel(dueDate: Date, status: Status): string {
-  if (status === "overdue") return `Was ${format(dueDate, "MMM d")}`;
-  if (status === "due") {
-    const days = differenceInDays(dueDate, new Date());
-    return `Due soon · ${days}d`;
-  }
-  const days = differenceInDays(dueDate, new Date());
-  return `Due · ${format(dueDate, "MMM")} · ${days}d`;
-}
-
-const allTasks = [
-  { id: 1, title: "Replace HVAC Filter", icon: Flame, category: "HVAC", difficulty: "Easy", dueDate: new Date("2026-02-05") },
-  { id: 2, title: "Test Smoke Detectors", icon: Shield, category: "Safety", difficulty: "Easy", dueDate: new Date("2026-02-18") },
-  { id: 3, title: "Check Water Heater", icon: Droplets, category: "Plumbing", difficulty: "Moderate", dueDate: new Date("2026-02-25") },
-  { id: 4, title: "Inspect Electrical Panel", icon: Zap, category: "Electrical", difficulty: "Easy", dueDate: new Date("2026-04-15") },
-  { id: 5, title: "Clean Gutters", icon: Flame, category: "Exterior", difficulty: "Moderate", dueDate: new Date("2026-05-10") },
-].map((t) => ({ ...t, status: computeStatus(t.dueDate) }));
-
-const priorityTasks = allTasks.filter((t) => t.status === "overdue" || t.status === "due");
+import { useHomeTasks } from "@/hooks/useHomeTasks";
 
 const recentActivity = [
   { title: "Replaced HVAC filter", time: "2 days ago" },
@@ -45,10 +18,23 @@ const activeCategories = categories.filter((cat) =>
   mockPros.some((p) => p.category === cat)
 );
 
+function getStatusColor(status: string): string {
+  if (status === "overdue") return "bg-destructive";
+  if (status === "due") return "bg-warning";
+  if (status === "completed") return "bg-success";
+  return "bg-muted-foreground/30";
+}
+
 const HubPage = () => {
   const navigate = useNavigate();
+  const { tasks, loading } = useHomeTasks();
   const [selectedTask, setSelectedTask] = useState<TaskForModal | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+
+  const priorityTasks = useMemo(
+    () => tasks.filter((t) => t.status === "overdue" || t.status === "due").slice(0, 5),
+    [tasks]
+  );
 
   const hasAgentRec = (cat: Category) =>
     mockPros.some((p) => p.category === cat && p.referral.type === "agent");
@@ -74,45 +60,68 @@ const HubPage = () => {
         </div>
       </div>
 
-      {/* Priority Tasks */}
-      {priorityTasks.length > 0 && (
-        <section className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-h3 text-foreground">Priority tasks</h2>
-            <button
-              onClick={() => navigate("/tasks")}
-              className="flex items-center gap-1 text-caption font-medium text-primary"
-            >
-              See all tasks
-              <ChevronRight size={14} />
-            </button>
+      {/* Priority Tasks — stacked timeline */}
+      <section className="mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-h3 text-foreground">Priority tasks</h2>
+          <button
+            onClick={() => navigate("/tasks")}
+            className="flex items-center gap-1 text-caption font-medium text-primary"
+          >
+            See all tasks
+            <ChevronRight size={14} />
+          </button>
+        </div>
+
+        {loading ? (
+          <div className="py-8 text-center text-muted-foreground text-body-small">Loading...</div>
+        ) : priorityTasks.length === 0 ? (
+          <div className="card-primer text-center py-6">
+            <p className="text-body-small text-muted-foreground">You're all caught up 🎉</p>
           </div>
-          <div className="flex gap-3 overflow-x-auto -mx-4 px-4 pb-2 scrollbar-hide">
-            {priorityTasks.map((task) => {
-              const Icon = task.icon;
-              return (
-                <motion.button
-                  key={task.id}
-                  whileTap={{ scale: 0.97 }}
-                  onClick={() => setSelectedTask(task)}
-                  className="card-primer flex-shrink-0 w-[190px] h-[140px] flex flex-col justify-between text-left"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="w-9 h-9 rounded-xl bg-secondary/10 flex items-center justify-center">
-                      <Icon size={18} className="text-secondary" />
-                    </div>
-                    <StatusBadge status={task.status} dueDate={task.dueDate} />
+        ) : (
+          <div className="relative flex flex-col">
+            {/* Dashed timeline connector */}
+            <div
+              className="absolute left-[11px] top-4 bottom-4 w-px border-l-2 border-dashed border-border"
+              aria-hidden
+            />
+
+            {priorityTasks.map((task) => (
+              <div key={task.id} className="relative flex gap-4 items-start">
+                {/* Status dot */}
+                <div className="relative z-10 mt-5 flex-shrink-0">
+                  <div className={`w-[22px] h-[22px] rounded-full ${getStatusColor(task.status)} flex items-center justify-center`}>
+                    {task.status === "completed" ? (
+                      <CheckCircle size={14} className="text-primary-foreground" />
+                    ) : (
+                      <Circle size={10} className="text-primary-foreground fill-current" />
+                    )}
                   </div>
-                  <div>
-                    <p className="text-body-small font-semibold text-foreground">{task.title}</p>
-                    <p className="text-caption text-muted-foreground mt-1">{formatDueLabel(task.dueDate, task.status)}</p>
+                </div>
+
+                {/* Card */}
+                <motion.button
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setSelectedTask(task as unknown as TaskForModal)}
+                  className="card-primer flex-1 mb-3 text-left"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-body-small font-semibold text-foreground">{task.title}</p>
+                      <p className="text-caption text-muted-foreground mt-1">
+                        {task.category}
+                        {task.difficulty && ` · ${task.difficulty}`}
+                      </p>
+                    </div>
+                    <StatusBadge status={task.status as Status} dueDate={task.nextDueAt || undefined} />
                   </div>
                 </motion.button>
-              );
-            })}
+              </div>
+            ))}
           </div>
-        </section>
-      )}
+        )}
+      </section>
 
       {/* Your Pros */}
       <section className="mb-8">
