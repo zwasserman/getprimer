@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 import { differenceInDays, parseISO, getMonth } from "date-fns";
+import { useAuth } from "@/hooks/useAuth";
 
 export type TaskTemplate = Tables<"task_templates">;
 export type HomeTask = Tables<"home_tasks">;
@@ -65,12 +66,14 @@ export interface UseHomeTasksOptions {
 }
 
 export const useHomeTasks = (options?: UseHomeTasksOptions) => {
+  const { user } = useAuth();
   const [tasks, setTasks] = useState<SurfacedTask[]>([]);
   const [profile, setProfile] = useState<HomeProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchTasks = useCallback(async () => {
+    if (!user) return;
     try {
       setLoading(true);
 
@@ -149,7 +152,7 @@ export const useHomeTasks = (options?: UseHomeTasksOptions) => {
     } finally {
       setLoading(false);
     }
-  }, [options?.allTiers]);
+  }, [options?.allTiers, user]);
 
   useEffect(() => {
     fetchTasks();
@@ -176,6 +179,7 @@ export const useHomeTasks = (options?: UseHomeTasksOptions) => {
           template_id: templateId,
           status: "completed",
           completed_at: now,
+          user_id: user?.id,
         });
       }
 
