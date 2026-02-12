@@ -114,7 +114,7 @@ function calculateUrgency(
   return "green";
 }
 
-export const useHomeTasks = () => {
+export const useHomeTasks = (options?: { allTiers?: boolean }) => {
   const [tasks, setTasks] = useState<SurfacedTask[]>([]);
   const [profile, setProfile] = useState<HomeProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -161,6 +161,7 @@ export const useHomeTasks = () => {
       }));
 
       const visibleTiers = getVisibleTiers(tasksWithCompletion);
+      const showAllTiers = options?.allTiers ?? false;
 
       const surfacedTasks = (templates || [])
         .map((template) => {
@@ -173,10 +174,11 @@ export const useHomeTasks = () => {
           const isSkipped = shouldSkipTask(template, profileData);
           const isSeasonal = template.task_type === "seasonal";
           const seasonMatch = isSeasonal ? isInSeason(template) : true;
-          const isVisible =
-            visibleTiers.has(template.tier as "T1" | "T2" | "T3" | "T4") &&
-            !isSkipped &&
-            seasonMatch;
+          const isVisible = showAllTiers
+            ? !isSkipped
+            : visibleTiers.has(template.tier as "T1" | "T2" | "T3" | "T4") &&
+              !isSkipped &&
+              seasonMatch;
 
           return {
             ...template,
@@ -198,7 +200,7 @@ export const useHomeTasks = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [options?.allTiers]);
 
   useEffect(() => {
     fetchTasks();
