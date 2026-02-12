@@ -204,6 +204,15 @@ const HubPage = () => {
             })}
           </div>
         )}
+
+        {incompleteTasks.length > HOME_TASK_LIMIT && (
+          <button
+            onClick={() => navigate("/tasks")}
+            className="w-full mt-2 py-3 rounded-2xl border border-border text-body-small font-medium text-primary text-center transition-all active:scale-[0.98]"
+          >
+            See all {incompleteTasks.length} tasks
+          </button>
+        )}
       </section>
 
       {/* Recent completed tasks */}
