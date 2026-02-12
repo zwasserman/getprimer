@@ -4,15 +4,29 @@ import { motion } from "framer-motion";
 import { User, CheckCircle2, ChevronRight, Circle, MessageCircle, BookOpen } from "lucide-react";
 import StatusBadge, { type Status } from "@/components/StatusBadge";
 import TaskChatModal, { type TaskForModal } from "@/components/TaskChatModal";
+import ProCategorySheet from "@/components/ProCategorySheet";
+import { mockPros, categories, categoryIcons, type Category } from "@/data/pros";
 import { useHomeTasks, type SurfacedTask } from "@/hooks/useHomeTasks";
 import { TIER_META, TIER_ORDER, getMissionIcon, getMissionShortLabel, MISSION_ORDER } from "@/lib/missions";
 
 const TIER_LIMITS: Record<string, number> = { T1: 99, T2: 5, T3: 3, T4: 0 };
 
+const activeCategories = categories.filter((cat) =>
+  mockPros.some((p) => p.category === cat)
+);
+
 const HubPage = () => {
   const navigate = useNavigate();
   const { tasks, loading, completeTask } = useHomeTasks();
   const [selectedTask, setSelectedTask] = useState<TaskForModal | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+
+  const hasAgentRec = (cat: Category) =>
+    mockPros.some((p) => p.category === cat && p.referral.type === "agent");
+
+  const sheetPros = selectedCategory
+    ? mockPros.filter((p) => p.category === selectedCategory)
+    : [];
 
   // Stats
   const t1All = useMemo(() => tasks.filter((t) => t.tier === "T1"), [tasks]);
@@ -221,7 +235,33 @@ const HubPage = () => {
         </section>
       )}
 
+      {/* Your Pros */}
+      <section className="mt-8 mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-h3 text-foreground">Your Pros</h2>
+          <button onClick={() => navigate("/pros")} className="text-caption font-medium text-secondary">
+            See all →
+          </button>
+        </div>
+        <div className="flex gap-4 overflow-x-auto -mx-4 px-4 pb-2 scrollbar-hide">
+          {activeCategories.map((cat) => {
+            const Icon = categoryIcons[cat];
+            const showDot = hasAgentRec(cat);
+            return (
+              <button key={cat} onClick={() => setSelectedCategory(cat)} className="flex flex-col items-center gap-1.5 flex-shrink-0">
+                <div className="relative w-16 h-16 rounded-2xl bg-background border border-border flex items-center justify-center">
+                  <Icon size={24} className="text-foreground" />
+                  {showDot && <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-secondary" />}
+                </div>
+                <span className="text-caption text-foreground">{cat}</span>
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
       <TaskChatModal task={selectedTask} open={!!selectedTask} onClose={() => setSelectedTask(null)} />
+      <ProCategorySheet category={selectedCategory} pros={sheetPros} open={!!selectedCategory} onClose={() => setSelectedCategory(null)} />
     </motion.div>
   );
 };
