@@ -1,100 +1,34 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Mic, Send, Flame, CheckCircle2, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import StatusBadge from "@/components/StatusBadge";
+import { ArrowLeft, Mic, Send, Plus, Sparkles, MessageSquare, X } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 interface Message {
   id: number;
-  type: "system" | "user" | "task-card" | "walkthrough-step";
+  type: "system" | "user";
   content: string;
-  stepIndex?: number;
-  totalSteps?: number;
-  task?: {
-    title: string;
-    category: string;
-    difficulty: string;
-    why: string;
-  };
 }
 
-const initialMessages: Message[] = [
-  {
-    id: 1,
-    type: "system",
-    content: "Here's your first simple task:"
-  },
-  {
-    id: 2,
-    type: "task-card",
-    content: "",
-    task: {
-      title: "Replace Your HVAC Filter",
-      category: "HVAC",
-      difficulty: "Easy",
-      why: "A clean filter improves air quality and keeps your system running efficiently. Most filters should be replaced every 1-3 months."
-    }
-  }
+interface HistoricalChat {
+  id: string;
+  title: string;
+  preview: string;
+  date: string;
+}
+
+const mockHistory: HistoricalChat[] = [
+  { id: "1", title: "HVAC Filter Help", preview: "How to replace my furnace filter", date: "Feb 8" },
+  { id: "2", title: "Water Heater Settings", preview: "Adjusting temperature to 120°F", date: "Feb 5" },
+  { id: "3", title: "Smoke Detector Check", preview: "Testing all detectors upstairs", date: "Jan 30" },
 ];
 
-const actionChips = [
-  { label: "I've done this", id: "done" },
-  { label: "Walk me through it", id: "walkthrough" },
-  { label: "Remind me later", id: "remind" },
-  { label: "Skip for now", id: "skip" },
-];
-
-const chipResponses: Record<string, Message[]> = {
-  done: [
-    { id: 0, type: "system", content: "Nice work! 🎉 Replacing your HVAC filter is one of the most impactful things you can do for your home." },
-    { id: 0, type: "system", content: "I've marked that as complete. Here's your next task:" },
-    {
-      id: 0, type: "task-card", content: "",
-      task: {
-        title: "Test Your Smoke Detectors",
-        category: "Safety",
-        difficulty: "Easy",
-        why: "Smoke detectors save lives — but only if they work. Press the test button on each one to make sure they're functioning properly.",
-      },
-    },
-  ],
-  walkthrough: [
-    { id: 0, type: "system", content: "Great choice! Let's do this step by step 👇" },
-    { id: 0, type: "walkthrough-step", stepIndex: 1, totalSteps: 4, content: "**Step 1:** Find your HVAC unit — it's usually in a utility closet, basement, or attic. Look for a large metal box with ducts coming out of it." },
-    { id: 0, type: "walkthrough-step", stepIndex: 2, totalSteps: 4, content: "**Step 2:** Locate the filter slot. It's typically on the side or bottom of the unit, behind a small cover or along a track." },
-    { id: 0, type: "walkthrough-step", stepIndex: 3, totalSteps: 4, content: "**Step 3:** Slide the old filter out. Note the size printed on the frame (e.g., 16x25x1) and the arrow showing airflow direction." },
-    { id: 0, type: "walkthrough-step", stepIndex: 4, totalSteps: 4, content: "**Step 4:** Slide in the new filter with the arrow pointing toward the unit. Close the cover." },
-    { id: 0, type: "system", content: "That's it! 🎉 The whole thing takes about 2 minutes. Let me know when you're done ✓" },
-  ],
-  remind: [
-    { id: 0, type: "system", content: "No problem! I'll remind you about this in 3 days. 📅" },
-    { id: 0, type: "system", content: "In the meantime, here's something even quicker:" },
-    {
-      id: 0, type: "task-card", content: "",
-      task: {
-        title: "Check Your Water Heater Temperature",
-        category: "Plumbing",
-        difficulty: "Easy",
-        why: "Most water heaters are set too high from the factory. Setting it to 120°F saves energy and prevents scalding.",
-      },
-    },
-  ],
-  skip: [
-    { id: 0, type: "system", content: "Skipped for now — no worries, we'll come back to it later." },
-    { id: 0, type: "system", content: "Here's another task you might want to tackle:" },
-    {
-      id: 0, type: "task-card", content: "",
-      task: {
-        title: "Locate Your Main Water Shut-Off",
-        category: "Plumbing",
-        difficulty: "Easy",
-        why: "In a plumbing emergency, you need to know where this is fast. It's usually near the water meter or where the main line enters your home.",
-      },
-    },
-  ],
-};
-
-const walkthroughSteps = chipResponses.walkthrough;
+function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  if (hour < 21) return "Good evening";
+  return "Good evening";
+}
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
 
@@ -104,63 +38,31 @@ interface ChatModalProps {
 }
 
 const ChatModal = ({ open, onClose }: ChatModalProps) => {
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
-  const [typing, setTyping] = useState(false);
   const [streaming, setStreaming] = useState(false);
-  const [walkthroughQueue, setWalkthroughQueue] = useState<Message[]>([]);
-  const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
+  const [showHistory, setShowHistory] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const hasMessages = messages.length > 0;
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
 
-  const addResponsesSequentially = (responses: Message[]) => {
-    setTyping(true);
-    responses.forEach((msg, i) => {
-      setTimeout(() => {
-        setMessages((prev) => [...prev, { ...msg, id: Date.now() + i }]);
-        if (i === responses.length - 1) setTyping(false);
-      }, 600 + i * 700);
-    });
-  };
-
-  const handleWalkthrough = () => {
-    const intro = walkthroughSteps[0];
-    const firstStep = walkthroughSteps[1];
-    const remaining = walkthroughSteps.slice(2);
-    setWalkthroughQueue(remaining);
-    setCompletedSteps(new Set());
-    setTyping(true);
-    setTimeout(() => {
-      setMessages((prev) => [...prev, { ...intro, id: Date.now() }]);
-      setTimeout(() => {
-        setMessages((prev) => [...prev, { ...firstStep, id: Date.now() + 1 }]);
-        setTyping(false);
-      }, 600);
-    }, 400);
-  };
-
-  const handleStepDone = (stepIndex: number) => {
-    setCompletedSteps((prev) => new Set([...prev, stepIndex]));
-    if (walkthroughQueue.length > 0) {
-      const next = walkthroughQueue[0];
-      setWalkthroughQueue((prev) => prev.slice(1));
-      setTyping(true);
-      setTimeout(() => {
-        setMessages((prev) => [...prev, { ...next, id: Date.now() }]);
-        setTyping(false);
-      }, 500);
+  // Reset when modal closes
+  useEffect(() => {
+    if (!open) {
+      setMessages([]);
+      setShowHistory(false);
     }
-  };
+  }, [open]);
 
   const streamAIResponse = async (conversationHistory: { role: string; content: string }[]) => {
     setStreaming(true);
     const assistantMsgId = Date.now() + 1;
     let assistantContent = "";
 
-    // Add empty assistant message
     setMessages((prev) => [...prev, { id: assistantMsgId, type: "system", content: "" }]);
 
     try {
@@ -236,12 +138,11 @@ const ChatModal = ({ open, onClose }: ChatModalProps) => {
   };
 
   const sendMessage = async (text: string) => {
-    if (!text.trim() || typing || streaming) return;
+    if (!text.trim() || streaming) return;
     const userMsg: Message = { id: Date.now(), type: "user", content: text };
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
 
-    // Build conversation history from user/system messages for AI context
     const history = messages
       .filter((m) => m.type === "user" || m.type === "system")
       .map((m) => ({
@@ -251,19 +152,6 @@ const ChatModal = ({ open, onClose }: ChatModalProps) => {
     history.push({ role: "user", content: text });
 
     await streamAIResponse(history);
-  };
-
-  const handleChip = (id: string) => {
-    if (typing || streaming) return;
-    const chip = actionChips.find((c) => c.id === id);
-    if (!chip) return;
-    setMessages((prev) => [...prev, { id: Date.now(), type: "user", content: chip.label }]);
-    if (id === "walkthrough") {
-      handleWalkthrough();
-    } else {
-      const responses = chipResponses[id];
-      if (responses) addResponsesSequentially(responses);
-    }
   };
 
   return (
@@ -278,104 +166,121 @@ const ChatModal = ({ open, onClose }: ChatModalProps) => {
           style={{ overscrollBehavior: "contain" }}
         >
           {/* Header */}
-          <div className="flex items-center gap-3 px-4 pt-5 pb-3">
+          <div className="flex items-center justify-between px-4 pt-5 pb-3">
             <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors p-1">
               <ArrowLeft size={22} />
             </button>
-            <h1 className="text-h3 text-foreground">Welcome Home, Zach!</h1>
+            <span className="text-body-small font-medium text-foreground">Primer</span>
+            <button
+              onClick={() => setShowHistory(!showHistory)}
+              className="text-muted-foreground hover:text-foreground transition-colors p-1"
+            >
+              <MessageSquare size={20} />
+            </button>
           </div>
 
-          {/* Messages */}
+          {/* History Drawer */}
+          <AnimatePresence>
+            {showHistory && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden border-b border-border/50"
+              >
+                <div className="px-4 pb-3">
+                  <p className="text-caption text-muted-foreground mb-2 font-medium">Recent Chats</p>
+                  <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+                    {mockHistory.map((chat) => (
+                      <button
+                        key={chat.id}
+                        className="flex-shrink-0 bg-card rounded-xl border border-border/50 p-3 text-left w-44 hover:border-primary/30 transition-colors"
+                      >
+                        <p className="text-body-small font-medium text-foreground truncate">{chat.title}</p>
+                        <p className="text-caption text-muted-foreground truncate mt-0.5">{chat.preview}</p>
+                        <p className="text-caption text-muted-foreground/60 mt-1">{chat.date}</p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Content Area */}
           <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 pb-24">
-            <div className="flex flex-col gap-4">
-              {messages.map((msg, i) => (
+            {!hasMessages ? (
+              /* Landing State */
+              <div className="flex flex-col items-center justify-center h-full text-center px-4">
                 <motion.div
-                  key={msg.id}
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.15, duration: 0.4 }}
+                >
+                  <Sparkles size={36} className="text-primary mb-5" />
+                </motion.div>
+                <motion.h2
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.05 }}
+                  transition={{ delay: 0.25, duration: 0.4 }}
+                  className="text-h1 text-foreground"
                 >
-                  {msg.type === "system" && (
-                    <div className="flex justify-start">
-                      <div className="bg-card rounded-2xl rounded-bl-md px-4 py-3 max-w-[80%] shadow-card border border-border/50">
-                        <p className="text-body-small text-foreground whitespace-pre-wrap">{msg.content}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {msg.type === "walkthrough-step" && msg.stepIndex != null && (
-                    <div className="bg-card rounded-2xl p-4 max-w-[90%] border border-border/50">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-caption text-muted-foreground">Step {msg.stepIndex} of {msg.totalSteps}</span>
-                      </div>
-                      <p className="text-body text-foreground mb-3">{msg.content.replace(/\*\*Step \d:\*\* /, '')}</p>
-                      {completedSteps.has(msg.stepIndex) ? (
-                        <div className="flex items-center gap-1.5 text-success">
-                          <CheckCircle2 size={16} />
-                          <span className="text-body-small font-medium">Done!</span>
+                  {getGreeting()}!
+                </motion.h2>
+                <motion.p
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.35, duration: 0.4 }}
+                  className="text-body text-muted-foreground mt-2"
+                >
+                  Ask me anything about your home.
+                </motion.p>
+              </div>
+            ) : (
+              /* Messages */
+              <div className="flex flex-col gap-4 pt-2">
+                {messages.map((msg, i) => (
+                  <motion.div
+                    key={msg.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.03 }}
+                  >
+                    {msg.type === "system" && (
+                      <div className="flex justify-start">
+                        <div className="bg-card rounded-2xl rounded-bl-md px-4 py-3 max-w-[80%] shadow-card border border-border/50">
+                          <p className="text-body-small text-foreground whitespace-pre-wrap">{msg.content}</p>
                         </div>
-                      ) : (
-                        <Button
-                          variant="chip"
-                          size="chip"
-                          className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20"
-                          onClick={() => handleStepDone(msg.stepIndex!)}
-                        >
-                          Done with this step ✓
-                        </Button>
-                      )}
-                    </div>
-                  )}
-
-                  {msg.type === "user" && (
-                    <div className="flex justify-end">
-                      <div className="bg-primary text-primary-foreground rounded-2xl rounded-br-md px-4 py-3 max-w-[80%]">
-                        <p className="text-body-small">{msg.content}</p>
                       </div>
-                    </div>
-                  )}
-
-                  {msg.type === "task-card" && msg.task && (
-                    <div className="flex flex-col gap-3">
-                      <div className="card-primer">
-                        <div className="flex items-center gap-2 mb-3">
-                          <div className="w-8 h-8 rounded-lg bg-secondary/10 flex items-center justify-center">
-                            <Flame size={16} className="text-secondary" />
-                          </div>
-                          <StatusBadge status="due" />
-                          <span className="text-caption text-muted-foreground ml-auto">{msg.task.difficulty}</span>
+                    )}
+                    {msg.type === "user" && (
+                      <div className="flex justify-end">
+                        <div className="bg-primary text-primary-foreground rounded-2xl rounded-br-md px-4 py-3 max-w-[80%]">
+                          <p className="text-body-small">{msg.content}</p>
                         </div>
-                        <h2 className="text-h2 text-foreground mb-2">{msg.task.title}</h2>
-                        <p className="text-body-small text-muted-foreground">{msg.task.why}</p>
                       </div>
-                      <div className="flex flex-wrap gap-2">
-                        {actionChips.map((chip) => (
-                          <Button key={chip.id} variant="chip" size="chip" onClick={() => handleChip(chip.id)}>
-                            {chip.label}
-                          </Button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </motion.div>
-              ))}
-              {streaming && (
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Loader2 size={16} className="animate-spin" />
-                  <span className="text-caption">Thinking...</span>
-                </div>
-              )}
-            </div>
+                    )}
+                  </motion.div>
+                ))}
+                {streaming && (
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Loader2 size={16} className="animate-spin" />
+                    <span className="text-caption">Thinking...</span>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Input */}
           <div className="px-4 pb-4 pt-2 bg-background">
-            <div className="flex items-center gap-2 bg-card rounded-full shadow-elevated px-4 py-2">
+            <div className="flex items-center gap-2 bg-card rounded-full shadow-elevated px-4 py-2 border border-border/50">
               <input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && sendMessage(input)}
-                placeholder="Ask a question..."
+                placeholder="Ask about your home..."
                 disabled={streaming}
                 className="flex-1 bg-transparent outline-none text-body text-foreground placeholder:text-muted-foreground disabled:opacity-50"
               />
@@ -385,10 +290,10 @@ const ChatModal = ({ open, onClose }: ChatModalProps) => {
               <button
                 onClick={() => sendMessage(input)}
                 disabled={streaming}
-                className="text-primary hover:text-primary/80 transition-colors p-1 disabled:opacity-50"
+                className="bg-primary text-primary-foreground rounded-full p-1.5 hover:bg-primary/90 transition-colors disabled:opacity-50"
                 aria-label="Send"
               >
-                <Send size={20} />
+                <Send size={16} />
               </button>
             </div>
           </div>
