@@ -40,6 +40,7 @@ const ChatModal = ({ open, onClose }: ChatModalProps) => {
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [history, setHistory] = useState<Conversation[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -52,6 +53,7 @@ const ChatModal = ({ open, onClose }: ChatModalProps) => {
       setView("landing");
       setMessages([]);
       setConversationId(null);
+      setTimeout(() => inputRef.current?.focus(), 500);
     }
   }, [open]);
 
@@ -275,6 +277,7 @@ const ChatModal = ({ open, onClose }: ChatModalProps) => {
                 >
                   <div className="flex items-center gap-2 bg-card rounded-full shadow-elevated px-4 py-2.5 border border-border/50">
                     <input
+                      ref={inputRef}
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && sendMessage(input)}
