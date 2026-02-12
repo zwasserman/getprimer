@@ -23,7 +23,7 @@ interface FilterOption {
 }
 
 const TasksPage = () => {
-  const { tasks, profile, loading, error, refetch } = useHomeTasks({ allTiers: true });
+  const { tasks, profile, loading, error, refetch, completeTask } = useHomeTasks({ allTiers: true });
   const [selectedTask, setSelectedTask] = useState<TaskForModal | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
   const [activeFilters, setActiveFilters] = useState<Record<FilterKey, string | null>>({
@@ -242,37 +242,53 @@ const TasksPage = () => {
                     const isCompleted = task.status === "completed";
 
                     return (
-                      <motion.button
+                      <div
                         key={task.id}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => openTask(task)}
-                        className="flex items-center gap-3 py-3.5 px-1 text-left border-b border-border/30 last:border-0"
+                        className="flex items-center gap-3 py-3.5 px-1 border-b border-border/30 last:border-0"
                       >
                         {isInfoTier ? (
                           <BookOpen size={18} className="text-muted-foreground flex-shrink-0" />
-                        ) : isCompleted ? (
-                          <CheckCircle2 size={22} className="text-success flex-shrink-0" />
                         ) : (
-                          <Circle size={22} className="text-muted-foreground/40 flex-shrink-0" />
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <p
-                            className={`text-body-small font-medium ${
-                              isCompleted ? "text-muted-foreground line-through" : "text-foreground"
-                            }`}
+                          <motion.button
+                            whileTap={{ scale: 0.85 }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              completeTask(task.id);
+                            }}
+                            className="flex-shrink-0"
+                            aria-label={isCompleted ? "Mark incomplete" : "Mark complete"}
                           >
-                            {task.title}
-                          </p>
-                          <p className="text-caption text-muted-foreground mt-0.5 capitalize">
-                            {task.category}
-                            {task.difficulty && ` · ${task.difficulty}`}
-                            {task.task_type === "seasonal" && task.season && ` · ${task.season}`}
-                          </p>
-                        </div>
-                        {!isInfoTier && (
-                          <StatusBadge status={task.status as Status} dueDate={task.nextDueAt || undefined} />
+                            {isCompleted ? (
+                              <CheckCircle2 size={22} className="text-success" />
+                            ) : (
+                              <Circle size={22} className="text-muted-foreground/40" />
+                            )}
+                          </motion.button>
                         )}
-                      </motion.button>
+                        <motion.button
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => openTask(task)}
+                          className="flex-1 min-w-0 text-left flex items-center gap-3"
+                        >
+                          <div className="flex-1 min-w-0">
+                            <p
+                              className={`text-body-small font-medium ${
+                                isCompleted ? "text-muted-foreground line-through" : "text-foreground"
+                              }`}
+                            >
+                              {task.title}
+                            </p>
+                            <p className="text-caption text-muted-foreground mt-0.5 capitalize">
+                              {task.category}
+                              {task.difficulty && ` · ${task.difficulty}`}
+                              {task.task_type === "seasonal" && task.season && ` · ${task.season}`}
+                            </p>
+                          </div>
+                          {!isInfoTier && (
+                            <StatusBadge status={task.status as Status} dueDate={task.nextDueAt || undefined} />
+                          )}
+                        </motion.button>
+                      </div>
                     );
                   })}
                 </div>

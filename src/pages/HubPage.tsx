@@ -27,7 +27,7 @@ function getStatusColor(status: string): string {
 
 const HubPage = () => {
   const navigate = useNavigate();
-  const { tasks, loading } = useHomeTasks();
+  const { tasks, loading, completeTask } = useHomeTasks();
   const [selectedTask, setSelectedTask] = useState<TaskForModal | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
 
@@ -89,8 +89,16 @@ const HubPage = () => {
 
             {priorityTasks.map((task) => (
               <div key={task.id} className="relative flex gap-4 items-start">
-                {/* Status dot */}
-                <div className="relative z-10 mt-5 flex-shrink-0">
+                {/* Status dot — tappable */}
+                <motion.button
+                  whileTap={{ scale: 0.8 }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    completeTask(task.id);
+                  }}
+                  className="relative z-10 mt-5 flex-shrink-0"
+                  aria-label={task.status === "completed" ? "Mark incomplete" : "Mark complete"}
+                >
                   <div className={`w-[22px] h-[22px] rounded-full ${getStatusColor(task.status)} flex items-center justify-center`}>
                     {task.status === "completed" ? (
                       <CheckCircle size={14} className="text-primary-foreground" />
@@ -98,7 +106,7 @@ const HubPage = () => {
                       <Circle size={10} className="text-primary-foreground fill-current" />
                     )}
                   </div>
-                </div>
+                </motion.button>
 
                 {/* Card */}
                 <motion.button
