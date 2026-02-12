@@ -1,47 +1,71 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { User, CheckCircle, ChevronRight, Circle, MessageCircle } from "lucide-react";
+import { User, CheckCircle2, ChevronRight, Circle, MessageCircle, BookOpen } from "lucide-react";
 import StatusBadge, { type Status } from "@/components/StatusBadge";
 import TaskChatModal, { type TaskForModal } from "@/components/TaskChatModal";
-import ProCategorySheet from "@/components/ProCategorySheet";
-import { mockPros, categories, categoryIcons, type Category } from "@/data/pros";
-import { useHomeTasks } from "@/hooks/useHomeTasks";
+import { useHomeTasks, type SurfacedTask } from "@/hooks/useHomeTasks";
+import { TIER_META, TIER_ORDER, getMissionIcon, getMissionShortLabel, MISSION_ORDER } from "@/lib/missions";
 
-const recentActivity = [
-  { title: "Replaced HVAC filter", time: "2 days ago" },
-  { title: "Tested smoke detectors", time: "5 days ago" },
-  { title: "Checked water pressure", time: "1 week ago" },
-];
-
-const activeCategories = categories.filter((cat) =>
-  mockPros.some((p) => p.category === cat)
-);
-
-function getStatusColor(status: string): string {
-  if (status === "overdue") return "bg-destructive";
-  if (status === "due") return "bg-warning";
-  if (status === "completed") return "bg-success";
-  return "bg-muted-foreground/30";
-}
+const TIER_LIMITS: Record<string, number> = { T1: 99, T2: 5, T3: 3, T4: 0 };
 
 const HubPage = () => {
   const navigate = useNavigate();
   const { tasks, loading, completeTask } = useHomeTasks();
   const [selectedTask, setSelectedTask] = useState<TaskForModal | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
 
-  const priorityTasks = useMemo(
-    () => tasks.filter((t) => t.status === "overdue" || t.status === "due" || t.status === "upcoming").slice(0, 4),
-    [tasks]
-  );
+  // Stats
+  const t1All = useMemo(() => tasks.filter((t) => t.tier === "T1"), [tasks]);
+  const t1Done = useMemo(() => t1All.filter((t) => t.status === "completed").length, [t1All]);
+  const t1Total = t1All.length;
+  const t1AllDone = t1Total > 0 && t1Done === t1Total;
 
-  const hasAgentRec = (cat: Category) =>
-    mockPros.some((p) => p.category === cat && p.referral.type === "agent");
+  // Incomplete tasks sorted by mission order
+  const incompleteTasks = useMemo(() => {
+    return tasks
+      .filter((t) => t.status !== "completed")
+      .sort((a, b) => {
+        const mA = MISSION_ORDER.indexOf(a.mission || "");
+        const mB = MISSION_ORDER.indexOf(b.mission || "");
+        return mA - mB || (a.sort_order || 0) - (b.sort_order || 0);
+      });
+  }, [tasks]);
 
-  const sheetPros = selectedCategory
-    ? mockPros.filter((p) => p.category === selectedCategory)
-    : [];
+  const tasksByTier = useMemo(() => {
+    const grouped: Record<string, SurfacedTask[]> = {};
+    for (const tier of TIER_ORDER) {
+      grouped[tier] = incompleteTasks.filter((t) => t.tier === tier);
+    }
+    return grouped;
+  }, [incompleteTasks]);
+
+  // Recent completed tasks
+  const recentCompleted = useMemo(() => {
+    return tasks
+      .filter((t) => t.status === "completed")
+      .slice(0, 3);
+  }, [tasks]);
+
+  const totalIncomplete = incompleteTasks.length;
+
+  const openTask = (task: SurfacedTask) => setSelectedTask(task as unknown as TaskForModal);
+
+  const getBadgeStatus = (task: SurfacedTask): Status => {
+    if (task.task_type === "info") return "learn";
+    if (task.status === "overdue") return "overdue";
+    if (task.status === "due") return "due";
+    return "upcoming";
+  };
+
+  // Progress line
+  const progressLine = t1AllDone
+    ? "First week essentials — all done ✓"
+    : t1Total > 0
+      ? `${t1Done} of ${t1Total} first-week tasks done${t1Done > 0 ? " ✓" : ""}`
+      : null;
+
+  // Welcome vs active header
+  const isNewUser = t1Done === 0;
 
   return (
     <motion.div
@@ -50,23 +74,40 @@ const HubPage = () => {
       className="flex flex-col min-h-screen px-4 pt-14 pb-32"
     >
       {/* Header */}
-      <div className="flex items-start justify-between mb-8">
+      <div className="flex items-start justify-between mb-2">
         <div>
-          <h1 className="text-h2 text-foreground">Welcome back, Zach</h1>
-          <p className="text-body-small text-muted-foreground mt-1">1234 Main St, Yardley PA</p>
+          {isNewUser ? (
+            <>
+              <h1 className="text-h2 text-foreground">Welcome to your</h1>
+              <h1 className="text-h2 text-foreground">new home, Zach 👋</h1>
+            </>
+          ) : (
+            <>
+              <h1 className="text-h2 text-foreground">Your Home</h1>
+              <p className="text-body-small text-muted-foreground mt-1">1234 Main St, Yardley PA</p>
+            </>
+          )}
         </div>
         <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
           <User size={20} className="text-primary" />
         </div>
       </div>
 
-      {/* AI Assistant Entry */}
+      {/* Context line */}
+      {isNewUser ? (
+        <p className="text-body-small text-muted-foreground mb-6">
+          You have {totalIncomplete} things to check on.{"\n"}Let's start with the essentials.
+        </p>
+      ) : (
+        progressLine && (
+          <p className="text-body-small text-muted-foreground mb-6">{progressLine}</p>
+        )
+      )}
+
+      {/* Ask Primer */}
       <button
-        onClick={() => {
-          const event = new CustomEvent("open-chat");
-          window.dispatchEvent(event);
-        }}
-        className="w-full mb-8 flex items-center gap-3 rounded-2xl bg-card border border-border px-4 py-3.5 shadow-card text-left transition-all active:scale-[0.98]"
+        onClick={() => window.dispatchEvent(new CustomEvent("open-chat"))}
+        className="w-full mb-6 flex items-center gap-3 rounded-2xl bg-card border border-border px-4 py-3.5 shadow-card text-left transition-all active:scale-[0.98]"
       >
         <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
           <MessageCircle size={20} className="text-primary" />
@@ -78,137 +119,109 @@ const HubPage = () => {
         <ChevronRight size={16} className="text-muted-foreground flex-shrink-0" />
       </button>
 
-      {/* Priority Tasks — stacked timeline */}
-      <section className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-h3 text-foreground">Priority tasks</h2>
-          <button
-            onClick={() => navigate("/tasks")}
-            className="flex items-center gap-1 text-caption font-medium text-primary"
-          >
-            See all tasks
-            <ChevronRight size={14} />
-          </button>
-        </div>
+      {/* Task tiers */}
+      {loading ? (
+        <div className="py-8 text-center text-muted-foreground text-body-small">Loading...</div>
+      ) : (
+        <div className="flex flex-col gap-6">
+          {TIER_ORDER.filter((tier) => tier !== "T4").map((tier) => {
+            const tierTasks = tasksByTier[tier];
+            if (tierTasks.length === 0) return null;
 
-        {loading ? (
-          <div className="py-8 text-center text-muted-foreground text-body-small">Loading...</div>
-        ) : priorityTasks.length === 0 ? (
-          <div className="card-primer text-center py-6">
-            <p className="text-body-small text-muted-foreground">You're all caught up 🎉</p>
-          </div>
-        ) : (
-          <div className="relative flex flex-col">
-            {/* Dashed timeline connector */}
-            <div
-              className="absolute left-[11px] top-4 bottom-4 w-px border-l-2 border-dashed border-border"
-              aria-hidden
-            />
+            const limit = TIER_LIMITS[tier];
+            const displayed = tierTasks.slice(0, limit);
+            const remaining = tierTasks.length - displayed.length;
+            const meta = TIER_META[tier];
 
-            {priorityTasks.map((task) => (
-              <div key={task.id} className="relative flex gap-4 items-start">
-                {/* Status dot — tappable */}
-                <motion.button
-                  whileTap={{ scale: 0.8 }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    completeTask(task.id);
-                  }}
-                  className="relative z-10 mt-5 flex-shrink-0"
-                  aria-label={task.status === "completed" ? "Mark incomplete" : "Mark complete"}
-                >
-                  <div className={`w-[22px] h-[22px] rounded-full ${getStatusColor(task.status)} flex items-center justify-center`}>
-                    {task.status === "completed" ? (
-                      <CheckCircle size={14} className="text-primary-foreground" />
-                    ) : (
-                      <Circle size={10} className="text-primary-foreground fill-current" />
-                    )}
-                  </div>
-                </motion.button>
-
-                {/* Card */}
-                <motion.button
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => setSelectedTask(task as unknown as TaskForModal)}
-                  className="card-primer flex-1 mb-3 text-left"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-body-small font-semibold text-foreground">{task.title}</p>
-                      <p className="text-caption text-muted-foreground mt-1">
-                        {task.category}
-                        {task.difficulty && ` · ${task.difficulty}`}
-                      </p>
-                    </div>
-                    <StatusBadge status={task.status as Status} dueDate={task.nextDueAt || undefined} />
-                  </div>
-                </motion.button>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* Your Pros */}
-      <section className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-h3 text-foreground">Your Pros</h2>
-          <button
-            onClick={() => navigate("/pros")}
-            className="text-caption font-medium text-secondary"
-          >
-            See all →
-          </button>
-        </div>
-        <div className="flex gap-4 overflow-x-auto -mx-4 px-4 pb-2 scrollbar-hide">
-          {activeCategories.map((cat) => {
-            const Icon = categoryIcons[cat];
-            const showDot = hasAgentRec(cat);
             return (
-              <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                className="flex flex-col items-center gap-1.5 flex-shrink-0"
-              >
-                <div className="relative w-16 h-16 rounded-2xl bg-background border border-border flex items-center justify-center">
-                  <Icon size={24} className="text-foreground" />
-                  {showDot && (
-                    <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-secondary" />
-                  )}
+              <section key={tier}>
+                {/* Tier Header */}
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-caption uppercase tracking-[1px] text-muted-foreground">
+                    {meta.displayName}
+                  </span>
+                  <span className="text-caption text-muted-foreground">
+                    {tierTasks.length} left
+                  </span>
                 </div>
-                <span className="text-caption text-foreground">{cat}</span>
-              </button>
+
+                {/* Task Cards */}
+                <div className="flex flex-col gap-3">
+                  {displayed.map((task) => {
+                    const isInfo = task.task_type === "info";
+
+                    return (
+                      <motion.button
+                        key={task.id}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => openTask(task)}
+                        className="card-primer text-left"
+                      >
+                        <div className="flex items-start gap-3">
+                          {isInfo ? (
+                            <BookOpen size={20} className="text-secondary flex-shrink-0 mt-0.5" />
+                          ) : (
+                            <motion.div
+                              whileTap={{ scale: 0.85 }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                completeTask(task.id);
+                              }}
+                              className="flex-shrink-0 mt-0.5"
+                            >
+                              <Circle size={22} className="text-muted-foreground/40" />
+                            </motion.div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between gap-2">
+                              <p className="text-body font-medium text-foreground truncate">{task.title}</p>
+                              <StatusBadge status={getBadgeStatus(task)} dueDate={task.nextDueAt || undefined} />
+                            </div>
+                            <p className="text-body-small text-muted-foreground mt-0.5">
+                              {getMissionIcon(task.mission)} {getMissionShortLabel(task.mission)} • {task.category}
+                              {task.difficulty && ` • ${task.difficulty}`}
+                            </p>
+                          </div>
+                        </div>
+                      </motion.button>
+                    );
+                  })}
+                </div>
+
+                {/* View all link */}
+                {remaining > 0 && (
+                  <button
+                    onClick={() => navigate("/tasks")}
+                    className="text-body-small font-medium text-primary mt-3 text-left"
+                  >
+                    View all {tierTasks.length} {meta.displayName.toLowerCase()} tasks →
+                  </button>
+                )}
+              </section>
             );
           })}
         </div>
-      </section>
+      )}
 
       {/* Recent Activity */}
-      <section className="mb-8">
-        <h2 className="text-h3 text-foreground mb-4">Recent Activity</h2>
-        <div className="flex flex-col gap-3">
-          {recentActivity.map((item, i) => (
-            <div key={i} className="flex items-center gap-3">
-              <CheckCircle size={18} className="text-success flex-shrink-0" />
-              <p className="text-body-small text-foreground flex-1">{item.title}</p>
-              <p className="text-caption text-muted-foreground">{item.time}</p>
+      {recentCompleted.length > 0 && (
+        <section className="mt-8">
+          <h2 className="text-h3 text-foreground mb-4">Recent Activity</h2>
+          <div className="card-primer">
+            <div className="flex flex-col gap-3">
+              {recentCompleted.map((task) => (
+                <div key={task.id} className="flex items-center gap-3">
+                  <CheckCircle2 size={18} className="text-success flex-shrink-0" />
+                  <p className="text-body-small text-foreground flex-1 truncate">{task.title}</p>
+                  <p className="text-caption text-muted-foreground">Done</p>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      </section>
+          </div>
+        </section>
+      )}
 
-      <TaskChatModal
-        task={selectedTask}
-        open={!!selectedTask}
-        onClose={() => setSelectedTask(null)}
-      />
-
-      <ProCategorySheet
-        category={selectedCategory}
-        pros={sheetPros}
-        open={!!selectedCategory}
-        onClose={() => setSelectedCategory(null)}
-      />
+      <TaskChatModal task={selectedTask} open={!!selectedTask} onClose={() => setSelectedTask(null)} />
     </motion.div>
   );
 };
