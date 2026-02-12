@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -18,6 +18,12 @@ const AppLayout = () => {
   const location = useLocation();
   const showTabBar = !location.pathname.startsWith("/onboarding");
   const [chatOpen, setChatOpen] = useState(false);
+
+  useEffect(() => {
+    const handler = () => setChatOpen(true);
+    window.addEventListener("open-chat", handler);
+    return () => window.removeEventListener("open-chat", handler);
+  }, []);
 
   return (
     <>
