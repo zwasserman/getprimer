@@ -1,26 +1,19 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Mic, Send, Plus, Sparkles, MessageSquare, X } from "lucide-react";
-import { Loader2 } from "lucide-react";
+import { ArrowLeft, Mic, Send, Sparkles, ChevronRight, Plus, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Message {
-  id: number;
+  id: string;
   type: "system" | "user";
   content: string;
 }
 
-interface HistoricalChat {
+interface Conversation {
   id: string;
   title: string;
-  preview: string;
-  date: string;
+  updated_at: string;
 }
-
-const mockHistory: HistoricalChat[] = [
-  { id: "1", title: "HVAC Filter Help", preview: "How to replace my furnace filter", date: "Feb 8" },
-  { id: "2", title: "Water Heater Settings", preview: "Adjusting temperature to 120°F", date: "Feb 5" },
-  { id: "3", title: "Smoke Detector Check", preview: "Testing all detectors upstairs", date: "Jan 30" },
-];
 
 function getGreeting(): string {
   const hour = new Date().getHours();
@@ -37,33 +30,79 @@ interface ChatModalProps {
   onClose: () => void;
 }
 
+type View = "landing" | "chat" | "history";
+
 const ChatModal = ({ open, onClose }: ChatModalProps) => {
+  const [view, setView] = useState<View>("landing");
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
-  const [showHistory, setShowHistory] = useState(false);
+  const [conversationId, setConversationId] = useState<string | null>(null);
+  const [history, setHistory] = useState<Conversation[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
-
-  const hasMessages = messages.length > 0;
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
 
-  // Reset when modal closes
+  // Load history when modal opens
   useEffect(() => {
-    if (!open) {
+    if (open) {
+      loadHistory();
+      setView("landing");
       setMessages([]);
-      setShowHistory(false);
+      setConversationId(null);
     }
   }, [open]);
 
-  const streamAIResponse = async (conversationHistory: { role: string; content: string }[]) => {
+  const loadHistory = async () => {
+    const { data } = await supabase
+      .from("conversations")
+      .select("id, title, updated_at")
+      .order("updated_at", { ascending: false })
+      .limit(20);
+    if (data) setHistory(data);
+  };
+
+  const createConversation = async (firstMessage: string): Promise<string> => {
+    const title = firstMessage.slice(0, 60) || "New Chat";
+    const { data } = await supabase
+      .from("conversations")
+      .insert({ title })
+      .select("id")
+      .single();
+    return data!.id;
+  };
+
+  const saveMessage = async (convId: string, role: "user" | "assistant", content: string) => {
+    await supabase.from("messages").insert({ conversation_id: convId, role, content });
+  };
+
+  const loadConversation = async (convId: string) => {
+    const { data } = await supabase
+      .from("messages")
+      .select("id, role, content")
+      .eq("conversation_id", convId)
+      .order("created_at", { ascending: true });
+    if (data) {
+      setMessages(
+        data.map((m) => ({
+          id: m.id,
+          type: m.role === "user" ? "user" : "system",
+          content: m.content,
+        }))
+      );
+    }
+    setConversationId(convId);
+    setView("chat");
+  };
+
+  const streamAIResponse = async (convId: string, conversationHistory: { role: string; content: string }[]) => {
     setStreaming(true);
-    const assistantMsgId = Date.now() + 1;
+    const tempId = `temp-${Date.now()}`;
     let assistantContent = "";
 
-    setMessages((prev) => [...prev, { id: assistantMsgId, type: "system", content: "" }]);
+    setMessages((prev) => [...prev, { id: tempId, type: "system", content: "" }]);
 
     try {
       const resp = await fetch(CHAT_URL, {
@@ -77,10 +116,8 @@ const ChatModal = ({ open, onClose }: ChatModalProps) => {
 
       if (!resp.ok || !resp.body) {
         const errorData = await resp.json().catch(() => ({}));
-        const errorMsg = errorData.error || "Sorry, I couldn't get a response right now. Try again in a moment.";
-        setMessages((prev) =>
-          prev.map((m) => (m.id === assistantMsgId ? { ...m, content: errorMsg } : m))
-        );
+        const errorMsg = errorData.error || "Sorry, I couldn't get a response right now.";
+        setMessages((prev) => prev.map((m) => (m.id === tempId ? { ...m, content: errorMsg } : m)));
         setStreaming(false);
         return;
       }
@@ -98,22 +135,17 @@ const ChatModal = ({ open, onClose }: ChatModalProps) => {
         while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
           let line = textBuffer.slice(0, newlineIndex);
           textBuffer = textBuffer.slice(newlineIndex + 1);
-
           if (line.endsWith("\r")) line = line.slice(0, -1);
           if (line.startsWith(":") || line.trim() === "") continue;
           if (!line.startsWith("data: ")) continue;
-
           const jsonStr = line.slice(6).trim();
           if (jsonStr === "[DONE]") break;
-
           try {
             const parsed = JSON.parse(jsonStr);
             const content = parsed.choices?.[0]?.delta?.content as string | undefined;
             if (content) {
               assistantContent += content;
-              setMessages((prev) =>
-                prev.map((m) => (m.id === assistantMsgId ? { ...m, content: assistantContent } : m))
-              );
+              setMessages((prev) => prev.map((m) => (m.id === tempId ? { ...m, content: assistantContent } : m)));
             }
           } catch {
             textBuffer = line + "\n" + textBuffer;
@@ -125,33 +157,53 @@ const ChatModal = ({ open, onClose }: ChatModalProps) => {
       console.error("Stream error:", e);
       if (!assistantContent) {
         setMessages((prev) =>
-          prev.map((m) =>
-            m.id === assistantMsgId
-              ? { ...m, content: "Sorry, something went wrong. Please try again." }
-              : m
-          )
+          prev.map((m) => (m.id === tempId ? { ...m, content: "Sorry, something went wrong." } : m))
         );
       }
     }
 
+    if (assistantContent) {
+      await saveMessage(convId, "assistant", assistantContent);
+    }
     setStreaming(false);
   };
 
   const sendMessage = async (text: string) => {
     if (!text.trim() || streaming) return;
-    const userMsg: Message = { id: Date.now(), type: "user", content: text };
-    setMessages((prev) => [...prev, userMsg]);
     setInput("");
 
-    const history = messages
-      .filter((m) => m.type === "user" || m.type === "system")
-      .map((m) => ({
-        role: m.type === "user" ? "user" : "assistant",
-        content: m.content,
-      }));
-    history.push({ role: "user", content: text });
+    let convId = conversationId;
+    if (!convId) {
+      convId = await createConversation(text);
+      setConversationId(convId);
+      setView("chat");
+    }
 
-    await streamAIResponse(history);
+    const userMsg: Message = { id: `user-${Date.now()}`, type: "user", content: text };
+    setMessages((prev) => [...prev, userMsg]);
+    await saveMessage(convId, "user", text);
+
+    const historyMsgs = messages
+      .filter((m) => m.content)
+      .map((m) => ({ role: m.type === "user" ? "user" : "assistant", content: m.content }));
+    historyMsgs.push({ role: "user", content: text });
+
+    await streamAIResponse(convId, historyMsgs);
+  };
+
+  const startNewChat = () => {
+    setMessages([]);
+    setConversationId(null);
+    setView("landing");
+  };
+
+  const formatDate = (dateStr: string) => {
+    const d = new Date(dateStr);
+    const now = new Date();
+    const diffDays = Math.floor((now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24));
+    if (diffDays === 0) return "Today";
+    if (diffDays === 1) return "Yesterday";
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   };
 
   return (
@@ -167,52 +219,29 @@ const ChatModal = ({ open, onClose }: ChatModalProps) => {
         >
           {/* Header */}
           <div className="flex items-center justify-between px-4 pt-5 pb-3">
-            <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors p-1">
-              <ArrowLeft size={22} />
-            </button>
-            <span className="text-body-small font-medium text-foreground">Primer</span>
             <button
-              onClick={() => setShowHistory(!showHistory)}
+              onClick={view === "history" ? () => setView("landing") : onClose}
               className="text-muted-foreground hover:text-foreground transition-colors p-1"
             >
-              <MessageSquare size={20} />
+              <ArrowLeft size={22} />
             </button>
+            <span className="text-body-small font-medium text-foreground">
+              {view === "history" ? "Chat History" : "Primer"}
+            </span>
+            {view === "chat" ? (
+              <button onClick={startNewChat} className="text-muted-foreground hover:text-foreground transition-colors p-1">
+                <Plus size={20} />
+              </button>
+            ) : (
+              <div className="w-8" />
+            )}
           </div>
 
-          {/* History Drawer */}
-          <AnimatePresence>
-            {showHistory && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="overflow-hidden border-b border-border/50"
-              >
-                <div className="px-4 pb-3">
-                  <p className="text-caption text-muted-foreground mb-2 font-medium">Recent Chats</p>
-                  <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
-                    {mockHistory.map((chat) => (
-                      <button
-                        key={chat.id}
-                        className="flex-shrink-0 bg-card rounded-xl border border-border/50 p-3 text-left w-44 hover:border-primary/30 transition-colors"
-                      >
-                        <p className="text-body-small font-medium text-foreground truncate">{chat.title}</p>
-                        <p className="text-caption text-muted-foreground truncate mt-0.5">{chat.preview}</p>
-                        <p className="text-caption text-muted-foreground/60 mt-1">{chat.date}</p>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Content Area */}
-          <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 pb-24">
-            {!hasMessages ? (
-              /* Landing State */
-              <div className="flex flex-col items-center justify-center h-full text-center px-4">
+          {/* Landing View */}
+          {view === "landing" && (
+            <div className="flex-1 flex flex-col px-4">
+              {/* Centered greeting + input */}
+              <div className="flex-1 flex flex-col items-center justify-center text-center px-4">
                 <motion.div
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
@@ -232,71 +261,156 @@ const ChatModal = ({ open, onClose }: ChatModalProps) => {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.35, duration: 0.4 }}
-                  className="text-body text-muted-foreground mt-2"
+                  className="text-body text-muted-foreground mt-2 mb-8"
                 >
                   Ask me anything about your home.
                 </motion.p>
-              </div>
-            ) : (
-              /* Messages */
-              <div className="flex flex-col gap-4 pt-2">
-                {messages.map((msg, i) => (
-                  <motion.div
-                    key={msg.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.03 }}
-                  >
-                    {msg.type === "system" && (
-                      <div className="flex justify-start">
-                        <div className="bg-card rounded-2xl rounded-bl-md px-4 py-3 max-w-[80%] shadow-card border border-border/50">
-                          <p className="text-body-small text-foreground whitespace-pre-wrap">{msg.content}</p>
-                        </div>
-                      </div>
-                    )}
-                    {msg.type === "user" && (
-                      <div className="flex justify-end">
-                        <div className="bg-primary text-primary-foreground rounded-2xl rounded-br-md px-4 py-3 max-w-[80%]">
-                          <p className="text-body-small">{msg.content}</p>
-                        </div>
-                      </div>
-                    )}
-                  </motion.div>
-                ))}
-                {streaming && (
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Loader2 size={16} className="animate-spin" />
-                    <span className="text-caption">Thinking...</span>
+
+                {/* Input centered under copy */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.45, duration: 0.4 }}
+                  className="w-full max-w-sm"
+                >
+                  <div className="flex items-center gap-2 bg-card rounded-full shadow-elevated px-4 py-2.5 border border-border/50">
+                    <input
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && sendMessage(input)}
+                      placeholder="Ask about your home..."
+                      className="flex-1 bg-transparent outline-none text-body text-foreground placeholder:text-muted-foreground"
+                    />
+                    <button className="text-muted-foreground hover:text-foreground transition-colors p-1" aria-label="Voice input">
+                      <Mic size={20} />
+                    </button>
+                    <button
+                      onClick={() => sendMessage(input)}
+                      className="bg-primary text-primary-foreground rounded-full p-1.5 hover:bg-primary/90 transition-colors"
+                      aria-label="Send"
+                    >
+                      <Send size={16} />
+                    </button>
                   </div>
+                </motion.div>
+              </div>
+
+              {/* Historical chats list */}
+              {history.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5, duration: 0.4 }}
+                  className="pb-6"
+                >
+                  <button
+                    onClick={() => setView("history")}
+                    className="flex items-center justify-between w-full mb-3"
+                  >
+                    <span className="text-caption font-medium text-muted-foreground uppercase tracking-wider">Recent Chats</span>
+                    <ChevronRight size={16} className="text-muted-foreground" />
+                  </button>
+                  <div className="flex flex-col divide-y divide-border/50">
+                    {history.slice(0, 3).map((chat) => (
+                      <button
+                        key={chat.id}
+                        onClick={() => loadConversation(chat.id)}
+                        className="flex items-center justify-between py-3 text-left hover:bg-card/50 transition-colors -mx-2 px-2 rounded-lg"
+                      >
+                        <p className="text-body-small font-medium text-foreground truncate flex-1 mr-3">{chat.title}</p>
+                        <span className="text-caption text-muted-foreground flex-shrink-0">{formatDate(chat.updated_at)}</span>
+                      </button>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </div>
+          )}
+
+          {/* History View */}
+          {view === "history" && (
+            <div className="flex-1 overflow-y-auto px-4">
+              <div className="flex flex-col divide-y divide-border/50">
+                {history.map((chat) => (
+                  <button
+                    key={chat.id}
+                    onClick={() => loadConversation(chat.id)}
+                    className="flex items-center justify-between py-4 text-left hover:bg-card/50 transition-colors -mx-2 px-2 rounded-lg"
+                  >
+                    <p className="text-body-small font-medium text-foreground truncate flex-1 mr-3">{chat.title}</p>
+                    <span className="text-caption text-muted-foreground flex-shrink-0">{formatDate(chat.updated_at)}</span>
+                  </button>
+                ))}
+                {history.length === 0 && (
+                  <p className="text-body text-muted-foreground text-center py-12">No chats yet</p>
                 )}
               </div>
-            )}
-          </div>
-
-          {/* Input */}
-          <div className="px-4 pb-4 pt-2 bg-background">
-            <div className="flex items-center gap-2 bg-card rounded-full shadow-elevated px-4 py-2 border border-border/50">
-              <input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && sendMessage(input)}
-                placeholder="Ask about your home..."
-                disabled={streaming}
-                className="flex-1 bg-transparent outline-none text-body text-foreground placeholder:text-muted-foreground disabled:opacity-50"
-              />
-              <button className="text-muted-foreground hover:text-foreground transition-colors p-1" aria-label="Voice input">
-                <Mic size={20} />
-              </button>
-              <button
-                onClick={() => sendMessage(input)}
-                disabled={streaming}
-                className="bg-primary text-primary-foreground rounded-full p-1.5 hover:bg-primary/90 transition-colors disabled:opacity-50"
-                aria-label="Send"
-              >
-                <Send size={16} />
-              </button>
             </div>
-          </div>
+          )}
+
+          {/* Chat View */}
+          {view === "chat" && (
+            <>
+              <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 pb-24">
+                <div className="flex flex-col gap-4 pt-2">
+                  {messages.map((msg, i) => (
+                    <motion.div
+                      key={msg.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.03 }}
+                    >
+                      {msg.type === "system" && (
+                        <div className="flex justify-start">
+                          <div className="bg-card rounded-2xl rounded-bl-md px-4 py-3 max-w-[80%] shadow-card border border-border/50">
+                            <p className="text-body-small text-foreground whitespace-pre-wrap">{msg.content}</p>
+                          </div>
+                        </div>
+                      )}
+                      {msg.type === "user" && (
+                        <div className="flex justify-end">
+                          <div className="bg-primary text-primary-foreground rounded-2xl rounded-br-md px-4 py-3 max-w-[80%]">
+                            <p className="text-body-small">{msg.content}</p>
+                          </div>
+                        </div>
+                      )}
+                    </motion.div>
+                  ))}
+                  {streaming && (
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Loader2 size={16} className="animate-spin" />
+                      <span className="text-caption">Thinking...</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Chat input */}
+              <div className="px-4 pb-4 pt-2 bg-background">
+                <div className="flex items-center gap-2 bg-card rounded-full shadow-elevated px-4 py-2 border border-border/50">
+                  <input
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && sendMessage(input)}
+                    placeholder="Ask about your home..."
+                    disabled={streaming}
+                    className="flex-1 bg-transparent outline-none text-body text-foreground placeholder:text-muted-foreground disabled:opacity-50"
+                  />
+                  <button className="text-muted-foreground hover:text-foreground transition-colors p-1" aria-label="Voice input">
+                    <Mic size={20} />
+                  </button>
+                  <button
+                    onClick={() => sendMessage(input)}
+                    disabled={streaming}
+                    className="bg-primary text-primary-foreground rounded-full p-1.5 hover:bg-primary/90 transition-colors disabled:opacity-50"
+                    aria-label="Send"
+                  >
+                    <Send size={16} />
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
         </motion.div>
       )}
     </AnimatePresence>
