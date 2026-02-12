@@ -1,16 +1,51 @@
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Phone, MessageSquare, Mail, UserPlus } from "lucide-react";
+import { X, Phone, MessageSquare, Mail, UserPlus, Share2, Trash2 } from "lucide-react";
 import type { Pro } from "@/data/pros";
 import { downloadVCard } from "@/lib/vcard";
+import { toast } from "sonner";
 
 interface ProDetailSheetProps {
   pro: Pro | null;
   open: boolean;
   onClose: () => void;
+  onRemove?: (proId: number) => void;
 }
 
-const ProDetailSheet = ({ pro, open, onClose }: ProDetailSheetProps) => {
+const ProDetailSheet = ({ pro, open, onClose, onRemove }: ProDetailSheetProps) => {
+  const [confirmRemove, setConfirmRemove] = useState(false);
+
   if (!pro) return null;
+
+  const handleShare = async () => {
+    const shareText = `${pro.business}\n${pro.contact}\n📞 ${pro.phone}\n✉️ ${pro.email}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: pro.business, text: shareText });
+      } catch {
+        // user cancelled
+      }
+    } else {
+      await navigator.clipboard.writeText(shareText);
+      toast.success("Pro info copied to clipboard");
+    }
+  };
+
+  const handleRemove = () => {
+    if (!confirmRemove) {
+      setConfirmRemove(true);
+      return;
+    }
+    onRemove?.(pro.id);
+    setConfirmRemove(false);
+    onClose();
+    toast.success(`${pro.business} removed`);
+  };
+
+  const handleClose = () => {
+    setConfirmRemove(false);
+    onClose();
+  };
 
   return (
     <AnimatePresence>
@@ -21,7 +56,7 @@ const ProDetailSheet = ({ pro, open, onClose }: ProDetailSheetProps) => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-foreground/30 z-[90]"
-            onClick={onClose}
+            onClick={handleClose}
           />
           <motion.div
             initial={{ y: "100%" }}
@@ -31,15 +66,20 @@ const ProDetailSheet = ({ pro, open, onClose }: ProDetailSheetProps) => {
             className="fixed bottom-0 left-0 right-0 z-[100] bg-card rounded-t-3xl max-h-[90vh] overflow-y-auto"
           >
             <div className="px-5 pt-5 pb-8">
-              {/* Close button */}
+              {/* Header */}
               <div className="flex justify-between items-start mb-6">
                 <div>
                   <h2 className="text-h2 text-foreground">{pro.business}</h2>
                   <p className="text-body-small text-muted-foreground mt-1">{pro.contact}</p>
                 </div>
-                <button onClick={onClose} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-                  <X size={18} className="text-muted-foreground" />
-                </button>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <button onClick={handleShare} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+                    <Share2 size={16} className="text-muted-foreground" />
+                  </button>
+                  <button onClick={handleClose} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+                    <X size={18} className="text-muted-foreground" />
+                  </button>
+                </div>
               </div>
 
               {/* Contact Info */}
@@ -79,7 +119,7 @@ const ProDetailSheet = ({ pro, open, onClose }: ProDetailSheetProps) => {
               </div>
 
               {/* Quick Actions */}
-              <div className="flex gap-2 flex-wrap">
+              <div className="flex gap-2 flex-wrap mb-4">
                 <a
                   href={`tel:${pro.phone}`}
                   className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-primary text-primary-foreground text-body-small font-medium hover:bg-primary/90 transition-colors flex-1 justify-center"
@@ -99,6 +139,19 @@ const ProDetailSheet = ({ pro, open, onClose }: ProDetailSheetProps) => {
                   <UserPlus size={14} /> Add Contact
                 </button>
               </div>
+
+              {/* Remove */}
+              <button
+                onClick={handleRemove}
+                className={`flex items-center gap-1.5 justify-center w-full py-2.5 rounded-full text-body-small font-medium transition-colors ${
+                  confirmRemove
+                    ? "bg-destructive text-destructive-foreground"
+                    : "text-destructive hover:bg-destructive/10"
+                }`}
+              >
+                <Trash2 size={14} />
+                {confirmRemove ? "Tap again to confirm" : "Remove Pro"}
+              </button>
             </div>
           </motion.div>
         </>
