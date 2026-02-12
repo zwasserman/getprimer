@@ -1,78 +1,80 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Flame, Droplets, Shield, Zap, Circle, CheckCircle2 } from "lucide-react";
+import { Circle, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import StatusBadge, { type Status } from "@/components/StatusBadge";
 import TaskChatModal, { type TaskForModal } from "@/components/TaskChatModal";
-import { differenceInDays, format } from "date-fns";
-
-interface Task {
-  id: number;
-  title: string;
-  category: string;
-  difficulty: string;
-  status: Status;
-  dueDate: Date;
-  icon: typeof Flame;
-}
-
-function computeStatus(dueDate: Date, completed: boolean): Status {
-  if (completed) return "completed";
-  const days = differenceInDays(dueDate, new Date());
-  if (days < 0) return "overdue";
-  if (days <= 30) return "due";
-  return "upcoming";
-}
-
-function formatDueLabel(dueDate: Date, status: Status): string {
-  if (status === "overdue") return `Was ${format(dueDate, "MMM d")}`;
-  if (status === "due") return `Due ${format(dueDate, "MMM d")}`;
-  const days = differenceInDays(dueDate, new Date());
-  return `${format(dueDate, "MMM d")} · ${days}d`;
-}
-
-const completedIds = new Set([6, 7, 8]);
-
-const rawTasks = [
-  { id: 1, title: "Replace HVAC Filter", category: "HVAC", difficulty: "Easy", dueDate: new Date("2026-02-05"), icon: Flame },
-  { id: 2, title: "Test Smoke Detectors", category: "Safety", difficulty: "Easy", dueDate: new Date("2026-02-18"), icon: Shield },
-  { id: 3, title: "Check Water Heater", category: "Plumbing", difficulty: "Moderate", dueDate: new Date("2026-02-25"), icon: Droplets },
-  { id: 4, title: "Inspect Electrical Panel", category: "Electrical", difficulty: "Easy", dueDate: new Date("2026-04-15"), icon: Zap },
-  { id: 5, title: "Clean Gutters", category: "Exterior", difficulty: "Moderate", dueDate: new Date("2026-05-10"), icon: Flame },
-  { id: 6, title: "Test GFCIs", category: "Electrical", difficulty: "Easy", dueDate: new Date("2026-02-01"), icon: Zap },
-  { id: 7, title: "Check Sump Pump", category: "Plumbing", difficulty: "Easy", dueDate: new Date("2026-01-28"), icon: Droplets },
-  { id: 8, title: "Change Door Locks", category: "Safety", difficulty: "Easy", dueDate: new Date("2026-01-20"), icon: Shield },
-];
-
-const allTasks: Task[] = rawTasks.map((t) => ({
-  ...t,
-  status: computeStatus(t.dueDate, completedIds.has(t.id)),
-}));
+import { useHomeTasks, type SurfacedTask } from "@/hooks/useHomeTasks";
+import { format } from "date-fns";
 
 const filters = ["All", "Overdue", "Upcoming", "Recently Completed"];
 
 const TasksPage = () => {
+  const { tasks, loading, error } = useHomeTasks();
   const [activeFilter, setActiveFilter] = useState("All");
   const [selectedTask, setSelectedTask] = useState<TaskForModal | null>(null);
 
-  const priorityTasks = allTasks.filter((t) => t.status === "overdue" || t.status === "due");
-  const filteredTasks = activeFilter === "All"
-    ? allTasks
-    : allTasks.filter((t) => {
-        if (activeFilter === "Overdue") return t.status === "overdue" || t.status === "due";
-        if (activeFilter === "Upcoming") return t.status === "upcoming";
-        if (activeFilter === "Recently Completed") return t.status === "completed";
-        return true;
-      });
+  const filteredTasks = useMemo(() => {
+    if (activeFilter === "All") {
+      return tasks;
+    }
 
-  const openTask = (task: Task) => {
-    setSelectedTask(task);
+    return tasks.filter((task) => {
+      if (activeFilter === "Overdue") return task.status === "overdue";
+      if (activeFilter === "Upcoming") return task.status === "upcoming" || task.status === "due";
+      if (activeFilter === "Recently Completed") return task.status === "completed";
+      return true;
+    });
+  }, [tasks, activeFilter]);
+
+  const tasksByTier = useMemo(() => {
+    const grouped: Record<string, SurfacedTask[]> = {
+      T1: [],
+      T2: [],
+      T3: [],
+      T4: [],
+    };
+
+    filteredTasks.forEach((task) => {
+      grouped[task.tier].push(task);
+    });
+
+    return grouped;
+  }, [filteredTasks]);
+
+  const openTask = (task: SurfacedTask) => {
+    setSelectedTask(task as unknown as TaskForModal);
   };
+
+  if (loading) {
+    return (
+      <div className="flex flex-col min-h-screen px-4 pt-14 pb-32 items-center justify-center">
+        <Loader2 size={32} className="animate-spin text-primary mb-4" />
+        <p className="text-muted-foreground">Loading tasks...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col min-h-screen px-4 pt-14 pb-32 items-center justify-center">
+        <AlertCircle size={32} className="text-destructive mb-4" />
+        <p className="text-muted-foreground text-center">{error}</p>
+      </div>
+    );
+  }
+
+  if (tasks.length === 0) {
+    return (
+      <div className="flex flex-col min-h-screen px-4 pt-14 pb-32 items-center justify-center">
+        <p className="text-muted-foreground">No tasks available</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen px-4 pt-14 pb-32">
       <h1 className="text-h1 text-foreground mb-6">Tasks</h1>
-
 
       {/* Filters */}
       <div className="flex gap-2 mb-5 overflow-x-auto scrollbar-hide">
@@ -88,35 +90,59 @@ const TasksPage = () => {
         ))}
       </div>
 
-      {/* Task List */}
-      <div className="flex flex-col gap-1">
-        {filteredTasks.map((task) => {
-          const Icon = task.icon;
-          const isCompleted = task.status === "completed";
+      {/* Tier Sections */}
+      <div className="flex flex-col gap-8">
+        {["T1", "T2", "T3", "T4"].map((tier) => {
+          const tierTasks = tasksByTier[tier as keyof typeof tasksByTier];
+
+          if (tierTasks.length === 0) return null;
+
+          const tierLabel = {
+            T1: "Essential Setup",
+            T2: "Core Maintenance",
+            T3: "Ongoing Care",
+            T4: "Reference Knowledge",
+          }[tier] || tier;
+
           return (
-            <motion.button
-              key={task.id}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => openTask(task)}
-              className="flex items-center gap-3 py-4 px-1 text-left border-b border-border/50 last:border-0"
-            >
-              {isCompleted ? (
-                <CheckCircle2 size={22} className="text-success flex-shrink-0" />
-              ) : (
-                <Circle size={22} className="text-muted-foreground flex-shrink-0" />
-              )}
-              <div className="flex-1 min-w-0">
-                <p className={`text-body-small font-medium ${isCompleted ? "text-muted-foreground line-through" : "text-foreground"}`}>
-                  {task.title}
-                </p>
-                <p className="text-caption text-muted-foreground mt-0.5">
-                  {task.category} · {task.difficulty}
-                </p>
+            <div key={tier}>
+              <h2 className="text-subheading text-foreground mb-3">{tierLabel}</h2>
+              <div className="flex flex-col gap-1">
+                {tierTasks.map((task) => {
+                  const isCompleted = task.status === "completed";
+
+                  return (
+                    <motion.button
+                      key={task.id}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => openTask(task)}
+                      className="flex items-center gap-3 py-4 px-1 text-left border-b border-border/50 last:border-0"
+                    >
+                      {isCompleted ? (
+                        <CheckCircle2 size={22} className="text-success flex-shrink-0" />
+                      ) : (
+                        <Circle size={22} className="text-muted-foreground flex-shrink-0" />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p
+                          className={`text-body-small font-medium ${
+                            isCompleted ? "text-muted-foreground line-through" : "text-foreground"
+                          }`}
+                        >
+                          {task.title}
+                        </p>
+                        <p className="text-caption text-muted-foreground mt-0.5">
+                          {task.category} · {task.difficulty || "—"}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <StatusBadge status={task.status as Status} dueDate={task.nextDueAt || new Date()} />
+                      </div>
+                    </motion.button>
+                  );
+                })}
               </div>
-              <div className="flex items-center gap-2 flex-shrink-0">
-                <StatusBadge status={task.status} dueDate={task.dueDate} />
-              </div>
-            </motion.button>
+            </div>
           );
         })}
       </div>
