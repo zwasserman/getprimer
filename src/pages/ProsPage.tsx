@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Phone, MessageSquare, UserPlus, Star, User, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { downloadVCard } from "@/lib/vcard";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -125,6 +126,7 @@ function ProCard({ pro }: { pro: Pro }) {
           <MessageSquare size={13} /> Text
         </a>
         <button
+          onClick={() => downloadVCard({ name: pro.contact, business: pro.business, phone: pro.phone, email: pro.email })}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted text-foreground text-caption font-medium hover:bg-muted/80 transition-colors"
         >
           <UserPlus size={13} /> Add Contact

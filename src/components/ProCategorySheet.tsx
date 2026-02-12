@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Phone, MessageSquare, Star, User, Plus, UserPlus } from "lucide-react";
 import type { Pro, Category } from "@/data/pros";
+import { downloadVCard } from "@/lib/vcard";
 
 interface ProCategorySheetProps {
   category: Category | null;
@@ -70,7 +71,7 @@ const ProCategorySheet = ({ category, pros, open, onClose }: ProCategorySheetPro
                         <a href={`sms:${pro.phone}`} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted text-foreground text-caption font-medium hover:bg-muted/80 transition-colors">
                           <MessageSquare size={13} /> Text
                         </a>
-                        <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted text-foreground text-caption font-medium hover:bg-muted/80 transition-colors">
+                        <button onClick={() => downloadVCard({ name: pro.contact, business: pro.business, phone: pro.phone, email: pro.email })} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted text-foreground text-caption font-medium hover:bg-muted/80 transition-colors">
                           <UserPlus size={13} /> Add Contact
                         </button>
                       </div>
