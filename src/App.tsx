@@ -8,6 +8,8 @@ import BottomTabBar from "@/components/BottomTabBar";
 import HubPage from "@/pages/HubPage";
 import TasksPage from "@/pages/TasksPage";
 import ProsPage from "@/pages/ProsPage";
+import MyHousePage from "@/pages/MyHousePage";
+import HomeProfileDetailPage from "@/pages/HomeProfileDetailPage";
 import OnboardingPage from "@/pages/OnboardingPage";
 import NotFound from "./pages/NotFound";
 import ChatModal from "@/components/ChatModal";
@@ -31,6 +33,8 @@ const AppLayout = () => {
         <Route path="/" element={<HubPage />} />
         <Route path="/tasks" element={<TasksPage />} />
         <Route path="/pros" element={<ProsPage />} />
+        <Route path="/my-house" element={<MyHousePage />} />
+        <Route path="/my-house/profile" element={<HomeProfileDetailPage />} />
         <Route path="/onboarding" element={<OnboardingPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
