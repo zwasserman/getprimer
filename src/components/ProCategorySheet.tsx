@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Phone, MessageSquare, Star, User, Plus, UserPlus } from "lucide-react";
 import type { Pro, Category } from "@/data/pros";
 import { downloadVCard } from "@/lib/vcard";
+import ProDetailSheet from "@/components/ProDetailSheet";
 
 interface ProCategorySheetProps {
   category: Category | null;
@@ -11,8 +13,11 @@ interface ProCategorySheetProps {
 }
 
 const ProCategorySheet = ({ category, pros, open, onClose }: ProCategorySheetProps) => {
+  const [selectedPro, setSelectedPro] = useState<Pro | null>(null);
+
   return (
-    <AnimatePresence>
+    <>
+      <AnimatePresence>
       {open && category && (
         <>
           <motion.div
@@ -43,7 +48,7 @@ const ProCategorySheet = ({ category, pros, open, onClose }: ProCategorySheetPro
               <div className="overflow-y-auto px-5 pb-5 flex-1">
                 <div className="flex flex-col gap-3">
                   {pros.map((pro) => (
-                    <div key={pro.id} className="card-primer flex flex-col gap-3">
+                    <button key={pro.id} onClick={() => setSelectedPro(pro)} className="text-left card-primer flex flex-col gap-3 hover:bg-muted/50 transition-colors">
                       <div>
                         <h3 className="text-h3 text-foreground">{pro.business}</h3>
                         <p className="text-body-small text-muted-foreground">{pro.contact}</p>
@@ -65,17 +70,17 @@ const ProCategorySheet = ({ category, pros, open, onClose }: ProCategorySheetPro
                         )}
                       </div>
                       <div className="flex gap-2 pt-1 border-t border-border/50">
-                        <a href={`tel:${pro.phone}`} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted text-foreground text-caption font-medium hover:bg-muted/80 transition-colors">
+                        <a onClick={(e) => e.stopPropagation()} href={`tel:${pro.phone}`} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted text-foreground text-caption font-medium hover:bg-muted/80 transition-colors">
                           <Phone size={13} /> Call
                         </a>
-                        <a href={`sms:${pro.phone}`} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted text-foreground text-caption font-medium hover:bg-muted/80 transition-colors">
+                        <a onClick={(e) => e.stopPropagation()} href={`sms:${pro.phone}`} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted text-foreground text-caption font-medium hover:bg-muted/80 transition-colors">
                           <MessageSquare size={13} /> Text
                         </a>
-                        <button onClick={() => downloadVCard({ name: pro.contact, business: pro.business, phone: pro.phone, email: pro.email })} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted text-foreground text-caption font-medium hover:bg-muted/80 transition-colors">
+                        <button onClick={(e) => { e.stopPropagation(); downloadVCard({ name: pro.contact, business: pro.business, phone: pro.phone, email: pro.email }); }} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted text-foreground text-caption font-medium hover:bg-muted/80 transition-colors">
                           <UserPlus size={13} /> Add Contact
                         </button>
                       </div>
-                    </div>
+                    </button>
                   ))}
                 </div>
                 <button className="flex items-center gap-1 text-primary font-medium text-body-small mt-4 mx-auto">
@@ -87,7 +92,9 @@ const ProCategorySheet = ({ category, pros, open, onClose }: ProCategorySheetPro
           </motion.div>
         </>
       )}
-    </AnimatePresence>
+      </AnimatePresence>
+      <ProDetailSheet pro={selectedPro} open={!!selectedPro} onClose={() => setSelectedPro(null)} />
+    </>
   );
 };
 

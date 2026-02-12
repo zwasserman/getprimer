@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Phone, MessageSquare, UserPlus, Star, User, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { downloadVCard } from "@/lib/vcard";
+import ProDetailSheet from "@/components/ProDetailSheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -85,9 +86,9 @@ function AddProModal({ open, onClose }: { open: boolean; onClose: () => void }) 
 
 /* ─── Pro Card ─── */
 
-function ProCard({ pro }: { pro: Pro }) {
+function ProCard({ pro, onSelect }: { pro: Pro; onSelect: (pro: Pro) => void }) {
   return (
-    <div className="card-primer flex flex-col gap-3">
+    <button onClick={() => onSelect(pro)} className="text-left card-primer flex flex-col gap-3 hover:bg-muted/50 transition-colors">
       <div>
         <h3 className="text-h3 text-foreground">{pro.business}</h3>
         <p className="text-body-small text-muted-foreground">{pro.contact}</p>
@@ -114,25 +115,30 @@ function ProCard({ pro }: { pro: Pro }) {
       {/* Quick action buttons */}
       <div className="flex gap-2 pt-1 border-t border-border/50">
         <a
+          onClick={(e) => e.stopPropagation()}
           href={`tel:${pro.phone}`}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted text-foreground text-caption font-medium hover:bg-muted/80 transition-colors"
         >
           <Phone size={13} /> Call
         </a>
         <a
+          onClick={(e) => e.stopPropagation()}
           href={`sms:${pro.phone}`}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted text-foreground text-caption font-medium hover:bg-muted/80 transition-colors"
         >
           <MessageSquare size={13} /> Text
         </a>
         <button
-          onClick={() => downloadVCard({ name: pro.contact, business: pro.business, phone: pro.phone, email: pro.email })}
+          onClick={(e) => {
+            e.stopPropagation();
+            downloadVCard({ name: pro.contact, business: pro.business, phone: pro.phone, email: pro.email });
+          }}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted text-foreground text-caption font-medium hover:bg-muted/80 transition-colors"
         >
           <UserPlus size={13} /> Add Contact
         </button>
       </div>
-    </div>
+    </button>
   );
 }
 
@@ -141,6 +147,7 @@ function ProCard({ pro }: { pro: Pro }) {
 const ProsPage = () => {
   const [activeFilter, setActiveFilter] = useState("All");
   const [addOpen, setAddOpen] = useState(false);
+  const [selectedPro, setSelectedPro] = useState<Pro | null>(null);
 
   const filtered = activeFilter === "All"
     ? mockPros
@@ -187,7 +194,7 @@ const ProsPage = () => {
       ) : activeFilter !== "All" ? (
         <div className="flex flex-col gap-3">
           {filtered.map((pro) => (
-            <ProCard key={pro.id} pro={pro} />
+            <ProCard key={pro.id} pro={pro} onSelect={setSelectedPro} />
           ))}
         </div>
       ) : (
@@ -202,7 +209,7 @@ const ProsPage = () => {
                 </div>
                 <div className="flex flex-col gap-3">
                   {pros.map((pro) => (
-                    <ProCard key={pro.id} pro={pro} />
+                    <ProCard key={pro.id} pro={pro} onSelect={setSelectedPro} />
                   ))}
                 </div>
               </section>
@@ -212,6 +219,7 @@ const ProsPage = () => {
       )}
 
       <AddProModal open={addOpen} onClose={() => setAddOpen(false)} />
+      <ProDetailSheet pro={selectedPro} open={!!selectedPro} onClose={() => setSelectedPro(null)} />
     </div>
   );
 };
