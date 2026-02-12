@@ -32,7 +32,7 @@ const HubPage = () => {
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
 
   const priorityTasks = useMemo(
-    () => tasks.filter((t) => t.status === "overdue" || t.status === "due").slice(0, 5),
+    () => tasks.filter((t) => t.status === "overdue" || t.status === "due" || t.status === "upcoming").slice(0, 4),
     [tasks]
   );
 
