@@ -6,14 +6,17 @@ type Status = "overdue" | "due" | "upcoming" | "completed" | "new" | "learn";
 interface StatusBadgeProps {
   status: Status;
   dueDate?: Date;
+  tierLabel?: string;
   className?: string;
 }
 
-function getLabel(status: Status, dueDate?: Date): string {
+function getLabel(status: Status, dueDate?: Date, tierLabel?: string): string {
   if (status === "overdue") return "Overdue";
   if (status === "completed") return "Done";
   if (status === "new") return "New";
   if (status === "learn") return "Learn";
+
+  if (tierLabel) return tierLabel;
 
   if (dueDate) {
     const days = differenceInDays(dueDate, new Date());
@@ -33,9 +36,9 @@ const styleMap: Record<Status, { bgClass: string; textClass: string }> = {
   learn: { bgClass: "bg-status-learn-bg", textClass: "text-status-learn-text" },
 };
 
-const StatusBadge = ({ status, dueDate, className }: StatusBadgeProps) => {
+const StatusBadge = ({ status, dueDate, tierLabel, className }: StatusBadgeProps) => {
   const style = styleMap[status];
-  const label = getLabel(status, dueDate);
+  const label = getLabel(status, dueDate, tierLabel);
 
   return (
     <span

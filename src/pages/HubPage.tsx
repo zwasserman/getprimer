@@ -197,7 +197,7 @@ const HubPage = () => {
                           {getMissionIcon(task.mission)} {getMissionShortLabel(task.mission)} • {task.category}
                         </p>
                       </div>
-                      <StatusBadge status={getBadgeStatus(task)} dueDate={task.nextDueAt || undefined} />
+                      <StatusBadge status={getBadgeStatus(task)} dueDate={task.nextDueAt || undefined} tierLabel={task.status !== "overdue" && task.status !== "completed" ? TIER_META[task.tier]?.displayName : undefined} />
                     </div>
                   </motion.button>
                 </div>
