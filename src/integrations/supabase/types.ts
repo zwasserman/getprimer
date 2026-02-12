@@ -181,6 +181,7 @@ export type Database = {
           frequency_days: number | null
           id: string
           is_prototype_task: boolean | null
+          mission: string | null
           season: string | null
           skip_conditions: string[] | null
           sort_order: number | null
@@ -205,6 +206,7 @@ export type Database = {
           frequency_days?: number | null
           id: string
           is_prototype_task?: boolean | null
+          mission?: string | null
           season?: string | null
           skip_conditions?: string[] | null
           sort_order?: number | null
@@ -229,6 +231,7 @@ export type Database = {
           frequency_days?: number | null
           id?: string
           is_prototype_task?: boolean | null
+          mission?: string | null
           season?: string | null
           skip_conditions?: string[] | null
           sort_order?: number | null
