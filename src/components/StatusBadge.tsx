@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 import { differenceInDays, format } from "date-fns";
 
-type Status = "overdue" | "due" | "upcoming" | "completed";
+type Status = "overdue" | "due" | "upcoming" | "completed" | "new" | "learn";
 
 interface StatusBadgeProps {
   status: Status;
@@ -12,6 +12,8 @@ interface StatusBadgeProps {
 function getLabel(status: Status, dueDate?: Date): string {
   if (status === "overdue") return "Overdue";
   if (status === "completed") return "Done";
+  if (status === "new") return "New";
+  if (status === "learn") return "Learn";
 
   if (dueDate) {
     const days = differenceInDays(dueDate, new Date());
@@ -27,6 +29,8 @@ const styleMap: Record<Status, { bgClass: string; textClass: string }> = {
   due: { bgClass: "bg-status-due-bg", textClass: "text-status-due-text" },
   upcoming: { bgClass: "bg-status-upcoming-bg", textClass: "text-status-upcoming-text" },
   completed: { bgClass: "bg-status-completed-bg", textClass: "text-status-completed-text" },
+  new: { bgClass: "bg-status-new-bg", textClass: "text-status-new-text" },
+  learn: { bgClass: "bg-status-learn-bg", textClass: "text-status-learn-text" },
 };
 
 const StatusBadge = ({ status, dueDate, className }: StatusBadgeProps) => {

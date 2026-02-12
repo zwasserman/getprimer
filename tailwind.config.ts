@@ -74,6 +74,10 @@ export default {
           "completed-text": "hsl(var(--status-completed-text))",
           "upcoming-bg": "hsl(var(--status-upcoming-bg))",
           "upcoming-text": "hsl(var(--status-upcoming-text))",
+          "new-bg": "hsl(var(--status-new-bg))",
+          "new-text": "hsl(var(--status-new-text))",
+          "learn-bg": "hsl(var(--status-learn-bg))",
+          "learn-text": "hsl(var(--status-learn-text))",
         },
       },
       borderRadius: {
