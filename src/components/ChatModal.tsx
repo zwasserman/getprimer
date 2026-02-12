@@ -68,10 +68,9 @@ const ChatModal = ({ open, onClose }: ChatModalProps) => {
 
   const createConversation = async (firstMessage: string): Promise<string> => {
     const title = firstMessage.slice(0, 60) || "New Chat";
-    const { data: { user } } = await supabase.auth.getUser();
     const { data } = await supabase
       .from("conversations")
-      .insert({ title, user_id: user?.id })
+      .insert({ title })
       .select("id")
       .single();
     return data!.id;
@@ -108,12 +107,11 @@ const ChatModal = ({ open, onClose }: ChatModalProps) => {
     setMessages((prev) => [...prev, { id: tempId, type: "system", content: "" }]);
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
       const resp = await fetch(CHAT_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${session?.access_token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
         body: JSON.stringify({ messages: conversationHistory }),
       });
