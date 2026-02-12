@@ -211,7 +211,11 @@ const TaskChatModal = ({ task, open, onClose }: TaskChatModalProps) => {
                   transition={{ delay: i * 0.05 }}
                 >
                   {msg.type === "system" && (
-                    <p className="text-body text-foreground max-w-[90%]">{msg.content}</p>
+                    <div className="flex justify-start">
+                      <div className="bg-card rounded-2xl rounded-bl-md px-4 py-3 max-w-[80%] shadow-card border border-border/50">
+                        <p className="text-body-small text-foreground">{msg.content}</p>
+                      </div>
+                    </div>
                   )}
 
                   {msg.type === "walkthrough-step" && msg.stepIndex != null && (
