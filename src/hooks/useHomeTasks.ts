@@ -206,5 +206,39 @@ export const useHomeTasks = (options?: { allTiers?: boolean }) => {
     fetchTasks();
   }, [fetchTasks]);
 
-  return { tasks, profile, loading, error, refetch: fetchTasks };
+  const completeTask = useCallback(async (templateId: string) => {
+    try {
+      // Check if a home_task row already exists
+      const { data: existing } = await supabase
+        .from("home_tasks")
+        .select("id, status")
+        .eq("template_id", templateId)
+        .maybeSingle();
+
+      const now = new Date().toISOString();
+
+      if (existing) {
+        const newStatus = existing.status === "completed" ? "not_started" : "completed";
+        await supabase
+          .from("home_tasks")
+          .update({
+            status: newStatus,
+            completed_at: newStatus === "completed" ? now : null,
+          })
+          .eq("id", existing.id);
+      } else {
+        await supabase.from("home_tasks").insert({
+          template_id: templateId,
+          status: "completed",
+          completed_at: now,
+        });
+      }
+
+      await fetchTasks();
+    } catch (err) {
+      console.error("Failed to toggle task completion:", err);
+    }
+  }, [fetchTasks]);
+
+  return { tasks, profile, loading, error, refetch: fetchTasks, completeTask };
 };
