@@ -35,6 +35,107 @@ export type Database = {
         }
         Relationships: []
       }
+      home_profiles: {
+        Row: {
+          created_at: string
+          has_basement: boolean
+          has_ceiling_fans: boolean
+          has_central_ac: boolean
+          has_deck: boolean
+          has_fireplace: boolean
+          has_furnace_humidifier: boolean
+          has_garage: boolean
+          has_gas: boolean
+          has_hoa: boolean
+          has_lawn: boolean
+          has_septic: boolean
+          has_sprinkler_system: boolean
+          id: string
+          stories: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          has_basement?: boolean
+          has_ceiling_fans?: boolean
+          has_central_ac?: boolean
+          has_deck?: boolean
+          has_fireplace?: boolean
+          has_furnace_humidifier?: boolean
+          has_garage?: boolean
+          has_gas?: boolean
+          has_hoa?: boolean
+          has_lawn?: boolean
+          has_septic?: boolean
+          has_sprinkler_system?: boolean
+          id?: string
+          stories?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          has_basement?: boolean
+          has_ceiling_fans?: boolean
+          has_central_ac?: boolean
+          has_deck?: boolean
+          has_fireplace?: boolean
+          has_furnace_humidifier?: boolean
+          has_garage?: boolean
+          has_gas?: boolean
+          has_hoa?: boolean
+          has_lawn?: boolean
+          has_septic?: boolean
+          has_sprinkler_system?: boolean
+          id?: string
+          stories?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      home_tasks: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          id: string
+          next_due_at: string | null
+          skipped_at: string | null
+          status: string
+          template_id: string
+          updated_at: string
+          urgency: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          next_due_at?: string | null
+          skipped_at?: string | null
+          status?: string
+          template_id: string
+          updated_at?: string
+          urgency?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          next_due_at?: string | null
+          skipped_at?: string | null
+          status?: string
+          template_id?: string
+          updated_at?: string
+          urgency?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "home_tasks_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "task_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           content: string
@@ -66,6 +167,81 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      task_templates: {
+        Row: {
+          category: string
+          created_at: string
+          difficulty: string | null
+          diy_or_pro: string | null
+          est_cost_high: number | null
+          est_cost_low: number | null
+          est_time: string | null
+          frequency: string | null
+          frequency_days: number | null
+          id: string
+          is_prototype_task: boolean | null
+          season: string | null
+          skip_conditions: string[] | null
+          sort_order: number | null
+          task_type: string
+          tier: string
+          timing_trigger: string | null
+          title: string
+          trigger_rule: string | null
+          trigger_type: string | null
+          urgency_escalation: Json | null
+          why_it_matters: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          difficulty?: string | null
+          diy_or_pro?: string | null
+          est_cost_high?: number | null
+          est_cost_low?: number | null
+          est_time?: string | null
+          frequency?: string | null
+          frequency_days?: number | null
+          id: string
+          is_prototype_task?: boolean | null
+          season?: string | null
+          skip_conditions?: string[] | null
+          sort_order?: number | null
+          task_type: string
+          tier: string
+          timing_trigger?: string | null
+          title: string
+          trigger_rule?: string | null
+          trigger_type?: string | null
+          urgency_escalation?: Json | null
+          why_it_matters: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          difficulty?: string | null
+          diy_or_pro?: string | null
+          est_cost_high?: number | null
+          est_cost_low?: number | null
+          est_time?: string | null
+          frequency?: string | null
+          frequency_days?: number | null
+          id?: string
+          is_prototype_task?: boolean | null
+          season?: string | null
+          skip_conditions?: string[] | null
+          sort_order?: number | null
+          task_type?: string
+          tier?: string
+          timing_trigger?: string | null
+          title?: string
+          trigger_rule?: string | null
+          trigger_type?: string | null
+          urgency_escalation?: Json | null
+          why_it_matters?: string
+        }
+        Relationships: []
       }
     }
     Views: {
