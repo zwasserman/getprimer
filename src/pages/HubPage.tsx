@@ -207,7 +207,7 @@ const HubPage = () => {
         )}
       </section>
 
-      {/* Recent Activity */}
+      {/* Recent completed tasks */}
       {recentCompleted.length > 0 && (
         <section className="mt-8">
           <h2 className="text-h3 text-foreground mb-4">Recent Activity</h2>
