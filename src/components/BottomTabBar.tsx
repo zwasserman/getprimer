@@ -27,7 +27,7 @@ const BottomTabBar = ({ onChatOpen }: BottomTabBarProps) => {
   };
 
   return (
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 lg:hidden">
       <nav className="flex items-center gap-0.5 bg-card rounded-full px-2 py-2 shadow-elevated">
         {tabs.map((tab) => {
           const isActive = tab.path === "/chat" ? false : location.pathname.startsWith(tab.path) && (tab.path !== "/" || location.pathname === "/");

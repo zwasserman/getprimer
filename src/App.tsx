@@ -5,12 +5,15 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import BottomTabBar from "@/components/BottomTabBar";
+import DesktopSidebar from "@/components/DesktopSidebar";
+import DesktopChatPanel from "@/components/DesktopChatPanel";
 import HubPage from "@/pages/HubPage";
 import TasksPage from "@/pages/TasksPage";
 import ProsPage from "@/pages/ProsPage";
 import MyHousePage from "@/pages/MyHousePage";
 import HomeProfileDetailPage from "@/pages/HomeProfileDetailPage";
 import OnboardingPage from "@/pages/OnboardingPage";
+import ChatPage from "@/pages/ChatPage";
 import NotFound from "./pages/NotFound";
 import ChatModal from "@/components/ChatModal";
 
@@ -20,6 +23,7 @@ const AppLayout = () => {
   const location = useLocation();
   const showTabBar = !location.pathname.startsWith("/onboarding");
   const [chatOpen, setChatOpen] = useState(false);
+  const isChatRoute = location.pathname === "/chat";
 
   useEffect(() => {
     const handler = () => setChatOpen(true);
@@ -28,19 +32,37 @@ const AppLayout = () => {
   }, []);
 
   return (
-    <>
-      <Routes>
-        <Route path="/" element={<HubPage />} />
-        <Route path="/tasks" element={<TasksPage />} />
-        <Route path="/pros" element={<ProsPage />} />
-        <Route path="/my-house" element={<MyHousePage />} />
-        <Route path="/my-house/profile" element={<HomeProfileDetailPage />} />
-        <Route path="/onboarding" element={<OnboardingPage />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+    <div className="flex min-h-screen w-full">
+      {/* Desktop sidebar — hidden on mobile */}
+      {showTabBar && <DesktopSidebar />}
+
+      {/* Main content area */}
+      <main className="flex-1 min-w-0 lg:max-h-screen lg:overflow-y-auto">
+        <div className="lg:max-w-[900px] lg:mx-auto">
+          <Routes>
+            <Route path="/" element={<HubPage />} />
+            <Route path="/tasks" element={<TasksPage />} />
+            <Route path="/pros" element={<ProsPage />} />
+            <Route path="/my-house" element={<MyHousePage />} />
+            <Route path="/my-house/profile" element={<HomeProfileDetailPage />} />
+            <Route path="/onboarding" element={<OnboardingPage />} />
+            <Route path="/chat" element={<ChatPage />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </div>
+      </main>
+
+      {/* Desktop right chat panel — hidden on mobile and when on /chat */}
+      {showTabBar && !isChatRoute && <DesktopChatPanel visible={true} />}
+
+      {/* Mobile bottom tab bar — hidden on desktop */}
       {showTabBar && !chatOpen && <BottomTabBar onChatOpen={() => setChatOpen(true)} />}
-      <ChatModal open={chatOpen} onClose={() => setChatOpen(false)} />
-    </>
+
+      {/* Mobile chat modal — only on mobile */}
+      <div className="lg:hidden">
+        <ChatModal open={chatOpen} onClose={() => setChatOpen(false)} />
+      </div>
+    </div>
   );
 };
 
