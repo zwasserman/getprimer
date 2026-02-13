@@ -108,6 +108,12 @@ const HubPage = () => {
         </button>
       )}
 
+      {/* Goals Header */}
+      <div className="mb-6">
+        <h2 className="text-h2 font-semibold text-foreground mb-1">Time to Get Primed</h2>
+        <p className="text-body-small text-muted-foreground">Jump into a goal below</p>
+      </div>
+
       {/* Missions */}
       {loading ? (
         <div className="py-8 text-center text-muted-foreground text-body-small">Loading...</div>
