@@ -17,7 +17,7 @@ const activeCategories = categories.filter((cat) =>
 
 const HubPage = () => {
   const navigate = useNavigate();
-  const { tasks, loading } = useHomeTasks();
+  const { tasks, loading } = useHomeTasks({ allTiers: true });
   const [selectedTask, setSelectedTask] = useState<TaskForModal | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
 
