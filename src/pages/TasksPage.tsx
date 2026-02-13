@@ -191,21 +191,23 @@ const TasksPage = () => {
                 onClick={() => openTask(task)}
                 className="flex items-center gap-3 w-full text-left py-3 border-b border-border/30 last:border-0">
 
-                  <Calendar size={16} className="text-muted-foreground flex-shrink-0" />
+                  <Calendar size={16} className="text-muted-foreground flex-shrink-0 mt-0.5" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-body font-medium text-foreground truncate">
-                      {task.title}
-                    </p>
-                    <p className="text-body-small text-muted-foreground">
-                      {task.frequency || task.task_type === "seasonal" ? "Seasonal" : "Recurring"}
-                      {task.nextDueAt && ` · Next: ${task.nextDueAt.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <span className="text-sm">{missionIcon}</span>
-                    {(task.status === "due" || task.status === "overdue") &&
-                  <StatusBadge status={getBadgeStatus(task)} dueDate={task.nextDueAt || undefined} />
-                  }
+                    <div className="flex items-center gap-2">
+                      <p className="text-body font-medium text-foreground">
+                        {task.title}
+                      </p>
+                      <span className="text-sm flex-shrink-0">{missionIcon}</span>
+                    </div>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <p className="text-body-small text-muted-foreground">
+                        {task.frequency || task.task_type === "seasonal" ? "Seasonal" : "Recurring"}
+                        {task.nextDueAt && ` · Next: ${task.nextDueAt.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`}
+                      </p>
+                      {(task.status === "due" || task.status === "overdue") &&
+                        <StatusBadge status={getBadgeStatus(task)} dueDate={task.nextDueAt || undefined} />
+                      }
+                    </div>
                   </div>
                 </motion.button>);
 
