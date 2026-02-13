@@ -1,11 +1,11 @@
 /** Mission and tier display metadata for the task system */
 
-export const MISSION_META: Record<string, { label: string; icon: string }> = {
-  know_your_home: { label: "Know Your Home", icon: "🏠" },
-  keep_it_running: { label: "Keep It Running", icon: "⚙️" },
-  protect_your_investment: { label: "Protect Your Investment", icon: "🛡️" },
-  build_your_file: { label: "Build Your File", icon: "📁" },
-  find_your_people: { label: "Find Your People", icon: "👥" },
+export const MISSION_META: Record<string, { label: string; icon: string; hook: string }> = {
+  know_your_home: { label: "Know Your Home", icon: "🏠", hook: "Learn where the important stuff is" },
+  keep_it_running: { label: "Keep It Running", icon: "⚙️", hook: "Small habits that prevent big problems" },
+  protect_your_investment: { label: "Protect Your Investment", icon: "🛡️", hook: "Avoid expensive surprises" },
+  build_your_file: { label: "Build Your File", icon: "📁", hook: "Keep your info where you can find it" },
+  find_your_people: { label: "Find Your People", icon: "👥", hook: "Know who to call before you need them" },
 };
 
 export const MISSION_ORDER = [
