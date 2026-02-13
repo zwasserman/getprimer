@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Mic, Send, Flame, Droplets, Shield, Zap, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import StatusBadge, { type Status } from "@/components/StatusBadge";
+import TaskDetailView from "@/components/TaskDetailView";
+import HVACFilterFlow from "@/components/flows/HVACFilterFlow";
 
 const iconMap: Record<string, typeof Flame> = {
   HVAC: Flame,
@@ -13,14 +15,46 @@ const iconMap: Record<string, typeof Flame> = {
 };
 
 export interface TaskForModal {
-  id: number;
+  id: number | string;
   title: string;
   category: string;
   difficulty: string;
   status: Status;
-  dueDate: Date;
+  dueDate?: Date;
   why?: string;
+  est_time?: string;
+  // template fields
+  template_id?: string;
+  task_type?: string;
 }
+
+/* ── HVAC Filter detection ─────────────────────────── */
+
+const HVAC_FILTER_DETAIL = {
+  title: "Find & Understand Your HVAC Filter",
+  category: "HVAC",
+  difficulty: "Easy",
+  estTime: "10-15 min",
+  estCost: "Free",
+  whyItMatters:
+    "Your HVAC filter catches dust, pet hair, pollen, and allergens before they circulate through your house. When it gets clogged, your system works harder (costing you more money) and your air quality drops. But before you can change it, you need to know where it is and what kind you have.",
+  whatYoullLearn: [
+    "Where your HVAC unit is",
+    "Where your filter lives",
+    "What size filter you need",
+  ],
+};
+
+function isHVACFilterTask(task: TaskForModal): boolean {
+  const title = (task.title || "").toLowerCase();
+  const category = (task.category || "").toLowerCase();
+  return (
+    category === "hvac" &&
+    (title.includes("filter") || title.includes("hvac"))
+  );
+}
+
+/* ── Generic flow types (non-HVAC) ─────────────────── */
 
 interface Message {
   id: number;
@@ -54,13 +88,18 @@ function getWalkthroughSteps(title: string): Message[] {
   ];
 }
 
+/* ── Component ─────────────────────────────────────── */
+
 interface TaskChatModalProps {
   task: TaskForModal | null;
   open: boolean;
   onClose: () => void;
 }
 
+type Phase = "detail" | "walkthrough" | "generic";
+
 const TaskChatModal = ({ task, open, onClose }: TaskChatModalProps) => {
+  const [phase, setPhase] = useState<Phase>("generic");
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);
@@ -70,21 +109,21 @@ const TaskChatModal = ({ task, open, onClose }: TaskChatModalProps) => {
 
   useEffect(() => {
     if (task && open) {
-      const why = task.why || `Keeping up with "${task.title}" helps maintain your home's value and safety.`;
-      setMessages([
-        { id: 1, type: "system", content: "Here's your task:" },
-        {
-          id: 2,
-          type: "task-card",
-          content: "",
-          task: {
-            title: task.title,
-            category: task.category,
-            difficulty: task.difficulty,
-            why,
+      if (isHVACFilterTask(task)) {
+        setPhase("detail");
+      } else {
+        setPhase("generic");
+        const why = task.why || `Keeping up with "${task.title}" helps maintain your home's value and safety.`;
+        setMessages([
+          { id: 1, type: "system", content: "Here's your task:" },
+          {
+            id: 2,
+            type: "task-card",
+            content: "",
+            task: { title: task.title, category: task.category, difficulty: task.difficulty, why },
           },
-        },
-      ]);
+        ]);
+      }
       setInput("");
       setTyping(false);
       setWalkthroughQueue([]);
@@ -178,8 +217,34 @@ const TaskChatModal = ({ task, open, onClose }: TaskChatModalProps) => {
 
   return (
     <AnimatePresence>
-      {open && (
+      {open && phase === "detail" && (
+        <TaskDetailView
+          key="detail"
+          title={HVAC_FILTER_DETAIL.title}
+          category={HVAC_FILTER_DETAIL.category}
+          difficulty={HVAC_FILTER_DETAIL.difficulty}
+          estTime={HVAC_FILTER_DETAIL.estTime}
+          estCost={HVAC_FILTER_DETAIL.estCost}
+          whyItMatters={HVAC_FILTER_DETAIL.whyItMatters}
+          whatYoullLearn={HVAC_FILTER_DETAIL.whatYoullLearn}
+          onBack={onClose}
+          onWalkthrough={() => setPhase("walkthrough")}
+          onAlreadyDone={onClose}
+        />
+      )}
+
+      {open && phase === "walkthrough" && (
+        <HVACFilterFlow
+          key="walkthrough"
+          onClose={onClose}
+          onComplete={onClose}
+          taskTitle={HVAC_FILTER_DETAIL.title}
+        />
+      )}
+
+      {open && phase === "generic" && (
         <motion.div
+          key="generic"
           initial={{ y: "100%" }}
           animate={{ y: 0 }}
           exit={{ y: "100%" }}
@@ -277,7 +342,7 @@ const TaskChatModal = ({ task, open, onClose }: TaskChatModalProps) => {
             </div>
           </div>
 
-          {/* Input - pinned to bottom */}
+          {/* Input */}
           <div className="px-4 pb-4 pt-2 bg-background">
             <div className="flex items-center gap-2 bg-card rounded-full shadow-elevated px-4 py-2">
               <input
