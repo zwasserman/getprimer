@@ -109,17 +109,17 @@ const TasksPage = () => {
       {timelyTasks.length > 0 &&
       <section className="mb-8">
           <h2 className="text-caption uppercase tracking-[1px] text-muted-foreground mb-3">
-            ​TimelY : IMportant Seasonal Tasks and Recuringg alerts that are ready for action                          
-
-
+            Timely
           </h2>
           <div className="flex flex-col gap-2">
-            {timelyTasks.map((task) => {const missionIcon = task.mission ? MISSION_META[task.mission]?.icon : "";return (
-                <motion.button
-                  key={task.id}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => openTask(task)}
-                  className="card-primer flex items-center gap-3 w-full text-left">
+            {timelyTasks.map((task) => {
+            const missionIcon = task.mission ? MISSION_META[task.mission]?.icon : "";
+            return (
+              <motion.button
+                key={task.id}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => openTask(task)}
+                className="card-primer flex items-center gap-3 w-full text-left">
 
                   <span className="text-lg flex-shrink-0">{missionIcon}</span>
                   <p className="text-body font-semibold text-foreground flex-1 min-w-0 truncate">
@@ -128,7 +128,7 @@ const TasksPage = () => {
                   <StatusBadge status={getBadgeStatus(task)} dueDate={task.nextDueAt || undefined} />
                 </motion.button>);
 
-            })}
+          })}
           </div>
         </section>
       }
@@ -136,21 +136,21 @@ const TasksPage = () => {
       {/* Section 2: Missions */}
       <section className="mb-8">
         <h2 className="text-caption uppercase tracking-[1px] text-muted-foreground mb-3">
-          ​Home Onboaarding Goals
-            
+          Missions
         </h2>
         <div className="flex flex-col gap-3">
-          {missionSummaries.order.map((missionId) => {const meta = MISSION_META[missionId];
-              if (!meta) return null;
-              const summary = missionSummaries.byMission[missionId];
-              const isComplete = summary && summary.done >= summary.total;
+          {missionSummaries.order.map((missionId) => {
+            const meta = MISSION_META[missionId];
+            if (!meta) return null;
+            const summary = missionSummaries.byMission[missionId];
+            const isComplete = summary && summary.done >= summary.total;
 
-              return (
-                <motion.button
-                  key={missionId}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => navigate(`/tasks/mission/${missionId}`)}
-                  className={`card-primer flex items-center gap-3 w-full text-left ${isComplete ? "opacity-60" : ""}`}>
+            return (
+              <motion.button
+                key={missionId}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => navigate(`/tasks/mission/${missionId}`)}
+                className={`card-primer flex items-center gap-3 w-full text-left ${isComplete ? "opacity-60" : ""}`}>
 
                 <span className="text-2xl flex-shrink-0">
                   {isComplete ? <CheckCircle2 size={24} className="text-success" /> : meta.icon}
@@ -159,7 +159,7 @@ const TasksPage = () => {
                   <p className={`text-h3 ${isComplete ? "text-muted-foreground" : "text-foreground"}`}>
                     {meta.label}
                   </p>
-                  <p className="text-body-small text-muted-foreground truncate">
+                  <p className="text-body-small text-muted-foreground truncate text-xs">
                     {meta.hook}
                   </p>
                 </div>
@@ -171,7 +171,7 @@ const TasksPage = () => {
                 </div>
               </motion.button>);
 
-            })}
+          })}
         </div>
       </section>
 
@@ -191,23 +191,21 @@ const TasksPage = () => {
                 onClick={() => openTask(task)}
                 className="flex items-center gap-3 w-full text-left py-3 border-b border-border/30 last:border-0">
 
-                  <Calendar size={16} className="text-muted-foreground flex-shrink-0 mt-0.5" />
+                  <Calendar size={16} className="text-muted-foreground flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="text-body font-medium text-foreground">
-                        {task.title}
-                      </p>
-                      <span className="text-sm flex-shrink-0">{missionIcon}</span>
-                    </div>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <p className="text-body-small text-muted-foreground">
-                        {task.frequency || task.task_type === "seasonal" ? "Seasonal" : "Recurring"}
-                        {task.nextDueAt && ` · Next: ${task.nextDueAt.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`}
-                      </p>
-                      {(task.status === "due" || task.status === "overdue") &&
-                        <StatusBadge status={getBadgeStatus(task)} dueDate={task.nextDueAt || undefined} />
-                      }
-                    </div>
+                    <p className="text-body font-medium text-foreground truncate">
+                      {task.title}
+                    </p>
+                    <p className="text-body-small text-muted-foreground">
+                      {task.frequency || task.task_type === "seasonal" ? "Seasonal" : "Recurring"}
+                      {task.nextDueAt && ` · Next: ${task.nextDueAt.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <span className="text-sm">{missionIcon}</span>
+                    {(task.status === "due" || task.status === "overdue") &&
+                  <StatusBadge status={getBadgeStatus(task)} dueDate={task.nextDueAt || undefined} />
+                  }
                   </div>
                 </motion.button>);
 
