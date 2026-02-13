@@ -139,14 +139,12 @@ const MissionDetailPage = () => {
           onClick={() => openTask(task)}
           className="flex-1 min-w-0 text-left"
         >
-          <div className="flex items-center gap-2">
-            <p className={`text-body font-medium truncate ${isCompleted ? "text-muted-foreground line-through" : "text-foreground"}`}>
-              {task.title}
-            </p>
-            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-caption font-medium flex-shrink-0 ${typeInfo.className}`}>
-              {getFrequencyLabel(task)}
-            </span>
-          </div>
+          <p className={`text-body font-medium ${isCompleted ? "text-muted-foreground line-through" : "text-foreground"}`}>
+            {task.title}
+          </p>
+          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-caption font-medium mt-0.5 ${typeInfo.className}`}>
+            {getFrequencyLabel(task)}
+          </span>
           {!isCompleted && (
             <p className="text-body-small text-muted-foreground mt-0.5">
               {task.difficulty || "Easy"} · {task.est_time || "15 min"}
