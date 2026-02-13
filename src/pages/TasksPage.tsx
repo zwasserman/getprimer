@@ -21,7 +21,7 @@ const TasksPage = () => {
     const state = location.state as {openMission?: string;} | null;
     if (state?.openMission) {
       setAutoOpenMission(state.openMission);
-      navigate(state.openMission, { replace: true, state: {} });
+      navigate(`/tasks/mission/${state.openMission}`, { replace: true, state: {} });
     }
   }, [location, navigate]);
 
