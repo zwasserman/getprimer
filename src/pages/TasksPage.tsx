@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useMemo, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Loader2, ChevronRight, CheckCircle2, Calendar,
@@ -13,6 +13,17 @@ const TasksPage = () => {
   const { tasks, loading, error, refetch } = useHomeTasks({ allTiers: true });
   const [selectedTask, setSelectedTask] = useState<TaskForModal | null>(null);
   const navigate = useNavigate();
+  const location = useLocation();
+  const [autoOpenMission, setAutoOpenMission] = useState<string | null>(null);
+
+  // Handle navigation from Hub with mission parameter
+  useEffect(() => {
+    const state = location.state as { openMission?: string } | null;
+    if (state?.openMission) {
+      setAutoOpenMission(state.openMission);
+      navigate(state.openMission, { replace: true, state: {} });
+    }
+  }, [location, navigate]);
 
   // --- Timely Tasks: overdue or due recurring/seasonal tasks ---
   const timelyTasks = useMemo(() => {
