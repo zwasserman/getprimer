@@ -14,6 +14,7 @@ import MyHousePage from "@/pages/MyHousePage";
 import HomeProfileDetailPage from "@/pages/HomeProfileDetailPage";
 import OnboardingPage from "@/pages/OnboardingPage";
 import ChatPage from "@/pages/ChatPage";
+import MissionDetailPage from "@/pages/MissionDetailPage";
 import NotFound from "./pages/NotFound";
 import ChatModal from "@/components/ChatModal";
 
@@ -43,6 +44,7 @@ const AppLayout = () => {
           <Routes>
             <Route path="/" element={<HubPage />} />
             <Route path="/tasks" element={<TasksPage />} />
+            <Route path="/tasks/mission/:missionId" element={<MissionDetailPage />} />
             <Route path="/pros" element={<ProsPage />} />
             <Route path="/my-house" element={<MyHousePage />} />
             <Route path="/my-house/profile" element={<HomeProfileDetailPage />} />
