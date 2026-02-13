@@ -109,7 +109,7 @@ const HubPage = () => {
       )}
 
       {/* Goals Header */}
-      <div className="mb-6">
+      <div className="mb-3">
         <h2 className="text-h3 font-semibold text-foreground mb-1">Time to Get Primed</h2>
         <p className="text-body-small text-muted-foreground">Jump into a goal below</p>
       </div>
