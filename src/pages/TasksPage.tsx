@@ -119,13 +119,15 @@ const TasksPage = () => {
                 key={task.id}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => openTask(task)}
-                className="card-primer flex items-center gap-3 w-full text-left">
+                className="card-primer flex flex-col gap-1 w-full text-left">
 
-                  <span className="text-lg flex-shrink-0">{missionIcon}</span>
-                  <p className="text-body font-semibold text-foreground flex-1 min-w-0 truncate">
-                    {task.title}
-                  </p>
-                  <StatusBadge status={getBadgeStatus(task)} dueDate={task.nextDueAt || undefined} />
+                  <div className="flex items-center gap-3">
+                    <span className="text-lg flex-shrink-0">{missionIcon}</span>
+                    <p className="text-body font-semibold text-foreground">
+                      {task.title}
+                    </p>
+                  </div>
+                  <StatusBadge status={getBadgeStatus(task)} dueDate={task.nextDueAt || undefined} className="self-start" />
                 </motion.button>);
 
           })}
