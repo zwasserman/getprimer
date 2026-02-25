@@ -6,7 +6,7 @@ import TaskChatModal, { type TaskForModal } from "@/components/TaskChatModal";
 import ProCategorySheet from "@/components/ProCategorySheet";
 import { mockPros, categories, categoryIcons, type Category } from "@/data/pros";
 import { useHomeTasks, type SurfacedTask } from "@/hooks/useHomeTasks";
-import { MISSION_META, MISSION_ORDER, getMissionIcon } from "@/lib/missions";
+import { MISSION_META, MISSION_ORDER, getCurrentSeason } from "@/lib/missions";
 import type { SurfacedTask as Task } from "@/hooks/useHomeTasks";
 
 const HOME_TASK_LIMIT = 4;
@@ -35,7 +35,8 @@ const HubPage = () => {
 
   // Mission progress and organization
   const missionProgress = useMemo(() => {
-    const progress: Record<string, { completed: number; total: number; isComplete: boolean }> = {};
+    const progress: Record<string, { completed: number; total: number; isComplete: boolean; subtitle?: string }> = {};
+    const currentSeason = getCurrentSeason();
     
     MISSION_ORDER.forEach((mission) => {
       const missionTasks = tasks.filter((t) => t.mission === mission);
@@ -46,6 +47,13 @@ const HubPage = () => {
         isComplete: missionTasks.length > 0 && completedCount === missionTasks.length,
       };
     });
+
+    // Seasonal subtitle
+    if (progress.seasonal_prep) {
+      const seasonTasks = tasks.filter(t => t.mission === "seasonal_prep" && t.season === currentSeason);
+      const seasonLabel = currentSeason === "fall" ? "Fall" : "Spring";
+      progress.seasonal_prep.subtitle = `${seasonLabel} prep — ${seasonTasks.length} tasks`;
+    }
     
     return progress;
   }, [tasks]);
@@ -141,7 +149,7 @@ const HubPage = () => {
                       {meta.label}
                     </p>
                     <p className={`text-caption ${isComplete ? "text-muted-foreground/60" : "text-muted-foreground"}`}>
-                      {meta.hook}
+                      {progress.subtitle || meta.hook}
                     </p>
                   </div>
                   <div className="flex items-center gap-3 flex-shrink-0">
