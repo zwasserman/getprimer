@@ -3,9 +3,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation, useNavigate, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import { MessageCircle } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import BottomTabBar from "@/components/BottomTabBar";
 import DesktopSidebar from "@/components/DesktopSidebar";
 import HubPage from "@/pages/HubPage";
@@ -16,35 +15,17 @@ import HomeProfileDetailPage from "@/pages/HomeProfileDetailPage";
 import OnboardingPage from "@/pages/OnboardingPage";
 import ChatPage from "@/pages/ChatPage";
 import MissionDetailPage from "@/pages/MissionDetailPage";
-import AuthPage from "@/pages/AuthPage";
 import NotFound from "./pages/NotFound";
 import ChatModal from "@/components/ChatModal";
-import type { Session } from "@supabase/supabase-js";
 
 const queryClient = new QueryClient();
 
 const AppLayout = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
-  const showTabBar = !location.pathname.startsWith("/onboarding") && !location.pathname.startsWith("/auth");
+  const showTabBar = !location.pathname.startsWith("/onboarding");
   const [chatOpen, setChatOpen] = useState(false);
   const isChatRoute = location.pathname === "/chat";
-
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setLoading(false);
-    });
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
 
   useEffect(() => {
     const handler = () => setChatOpen(true);
@@ -52,28 +33,15 @@ const AppLayout = () => {
     return () => window.removeEventListener("open-chat", handler);
   }, []);
 
-  if (loading) {
-    return <div className="min-h-screen flex items-center justify-center bg-background"><span className="text-muted-foreground">Loading...</span></div>;
-  }
-
-  const isAuthRoute = location.pathname === "/auth";
-
-  if (!session && !isAuthRoute) {
-    return <Navigate to="/auth" replace />;
-  }
-
-  if (session && isAuthRoute) {
-    return <Navigate to="/" replace />;
-  }
-
   return (
     <div className="flex min-h-screen w-full">
+      {/* Desktop sidebar — hidden on mobile */}
       {showTabBar && <DesktopSidebar />}
 
+      {/* Main content area */}
       <main className="flex-1 min-w-0 lg:max-h-screen lg:overflow-y-auto">
         <div className="lg:max-w-[900px] lg:mx-auto">
           <Routes>
-            <Route path="/auth" element={<AuthPage />} />
             <Route path="/" element={<HubPage />} />
             <Route path="/tasks" element={<TasksPage />} />
             <Route path="/tasks/mission/:missionId" element={<MissionDetailPage />} />
@@ -87,6 +55,7 @@ const AppLayout = () => {
         </div>
       </main>
 
+      {/* Floating chat bubble — desktop only, hidden on /chat */}
       {showTabBar && !isChatRoute && (
         <button
           onClick={() => navigate("/chat")}
@@ -97,8 +66,10 @@ const AppLayout = () => {
         </button>
       )}
 
+      {/* Mobile bottom tab bar — hidden on desktop */}
       {showTabBar && !chatOpen && <BottomTabBar onChatOpen={() => setChatOpen(true)} />}
 
+      {/* Mobile chat modal — only on mobile */}
       <div className="lg:hidden">
         <ChatModal open={chatOpen} onClose={() => setChatOpen(false)} />
       </div>
