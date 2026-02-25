@@ -1,17 +1,27 @@
 /** Mission and tier display metadata for the task system */
+import { getMonth } from "date-fns";
+
+export function getCurrentSeason(): "fall" | "spring" {
+  const month = getMonth(new Date());
+  // Oct(9)-Feb(1) = fall/winter, Mar(2)-Sep(8) = spring/summer
+  if (month >= 2 && month <= 8) return "spring";
+  return "fall";
+}
+
+export function getSeasonLabel(season: "fall" | "spring"): string {
+  return season === "fall" ? "Fall / Winter" : "Spring / Summer";
+}
 
 export const MISSION_META: Record<string, { label: string; icon: string; hook: string }> = {
   know_your_home: { label: "Know Your Home", icon: "🏠", hook: "Learn where the important stuff is" },
-  keep_it_running: { label: "Keep It Running", icon: "⚙️", hook: "Small habits that prevent big problems" },
-  protect_your_investment: { label: "Protect Your Investment", icon: "🛡️", hook: "Avoid expensive surprises" },
-  build_your_file: { label: "Build Your File", icon: "📁", hook: "Keep your info where you can find it" },
+  seasonal_prep: { label: "Seasonal Prep", icon: "🍂", hook: "Get ready for what's coming" },
+  build_your_file: { label: "Build Your File", icon: "📁", hook: "Get your important docs together" },
   find_your_people: { label: "Find Your People", icon: "👥", hook: "Know who to call before you need them" },
 };
 
 export const MISSION_ORDER = [
   "know_your_home",
-  "keep_it_running",
-  "protect_your_investment",
+  "seasonal_prep",
   "build_your_file",
   "find_your_people",
 ];
@@ -37,6 +47,5 @@ export function getMissionIcon(mission: string | null): string {
 
 /** Shorten long mission names for tight spaces */
 export function getMissionShortLabel(mission: string | null): string {
-  if (mission === "protect_your_investment") return "Protect";
   return getMissionLabel(mission);
 }
