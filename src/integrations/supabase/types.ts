@@ -347,6 +347,8 @@ export type Database = {
       task_templates: {
         Row: {
           category: string
+          conditional: string | null
+          consolidated_from: string | null
           created_at: string
           difficulty: string | null
           diy_or_pro: string | null
@@ -356,11 +358,18 @@ export type Database = {
           frequency: string | null
           frequency_days: number | null
           id: string
+          is_consolidated: boolean
           is_prototype_task: boolean | null
           mission: string | null
+          notes: string | null
+          priority_level: string | null
+          required_systems: string | null
           season: string | null
           skip_conditions: string[] | null
           sort_order: number | null
+          spawn_frequency_days: number | null
+          spawn_name: string | null
+          spawns_reminder: boolean
           task_type: string
           tier: string
           timing_trigger: string | null
@@ -372,6 +381,8 @@ export type Database = {
         }
         Insert: {
           category: string
+          conditional?: string | null
+          consolidated_from?: string | null
           created_at?: string
           difficulty?: string | null
           diy_or_pro?: string | null
@@ -381,11 +392,18 @@ export type Database = {
           frequency?: string | null
           frequency_days?: number | null
           id: string
+          is_consolidated?: boolean
           is_prototype_task?: boolean | null
           mission?: string | null
+          notes?: string | null
+          priority_level?: string | null
+          required_systems?: string | null
           season?: string | null
           skip_conditions?: string[] | null
           sort_order?: number | null
+          spawn_frequency_days?: number | null
+          spawn_name?: string | null
+          spawns_reminder?: boolean
           task_type: string
           tier: string
           timing_trigger?: string | null
@@ -397,6 +415,8 @@ export type Database = {
         }
         Update: {
           category?: string
+          conditional?: string | null
+          consolidated_from?: string | null
           created_at?: string
           difficulty?: string | null
           diy_or_pro?: string | null
@@ -406,11 +426,18 @@ export type Database = {
           frequency?: string | null
           frequency_days?: number | null
           id?: string
+          is_consolidated?: boolean
           is_prototype_task?: boolean | null
           mission?: string | null
+          notes?: string | null
+          priority_level?: string | null
+          required_systems?: string | null
           season?: string | null
           skip_conditions?: string[] | null
           sort_order?: number | null
+          spawn_frequency_days?: number | null
+          spawn_name?: string | null
+          spawns_reminder?: boolean
           task_type?: string
           tier?: string
           timing_trigger?: string | null
