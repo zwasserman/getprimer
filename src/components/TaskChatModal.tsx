@@ -5,6 +5,13 @@ import { Button } from "@/components/ui/button";
 import StatusBadge, { type Status } from "@/components/StatusBadge";
 import TaskDetailView from "@/components/TaskDetailView";
 import HVACFilterFlow from "@/components/flows/HVACFilterFlow";
+import TaskFlowEngine from "@/components/flows/TaskFlowEngine";
+import { waterShutoffFlow, waterShutoffDetail } from "@/components/flows/WaterShutoffFlow";
+import { gasShutoffFlow, gasShutoffDetail } from "@/components/flows/GasShutoffFlow";
+import { electricalPanelFlow, electricalPanelDetail } from "@/components/flows/ElectricalPanelFlow";
+import { safetyDeviceFlow, safetyDeviceDetail } from "@/components/flows/SafetyDeviceFlow";
+import { waterHeaterFlow, waterHeaterDetail } from "@/components/flows/WaterHeaterFlow";
+import { interiorWalkthroughFlow, interiorWalkthroughDetail } from "@/components/flows/InteriorWalkthroughFlow";
 
 const iconMap: Record<string, typeof Flame> = {
   HVAC: Flame,
@@ -12,6 +19,12 @@ const iconMap: Record<string, typeof Flame> = {
   Safety: Shield,
   Electrical: Zap,
   Exterior: Flame,
+  General: Flame,
+  hvac: Flame,
+  plumbing: Droplets,
+  safety: Shield,
+  electrical: Zap,
+  general: Flame,
 };
 
 export interface TaskForModal {
@@ -23,38 +36,87 @@ export interface TaskForModal {
   dueDate?: Date;
   why?: string;
   est_time?: string;
-  // template fields
   template_id?: string;
   task_type?: string;
 }
 
-/* ── HVAC Filter detection ─────────────────────────── */
+/* ── Task flow registry ────────────────────────────── */
 
-const HVAC_FILTER_DETAIL = {
-  title: "Find & Understand Your HVAC Filter",
-  category: "HVAC",
-  difficulty: "Easy",
-  estTime: "10-15 min",
-  estCost: "Free",
-  whyItMatters:
-    "Your HVAC filter catches dust, pet hair, pollen, and allergens before they circulate through your house. When it gets clogged, your system works harder (costing you more money) and your air quality drops. But before you can change it, you need to know where it is and what kind you have.",
-  whatYoullLearn: [
-    "Where your HVAC unit is",
-    "Where your filter lives",
-    "What size filter you need",
-  ],
-};
-
-function isHVACFilterTask(task: TaskForModal): boolean {
-  const title = (task.title || "").toLowerCase();
-  const category = (task.category || "").toLowerCase();
-  return (
-    category === "hvac" &&
-    (title.includes("filter") || title.includes("hvac"))
-  );
+interface TaskFlowConfig {
+  detail: {
+    title: string;
+    category: string;
+    difficulty: string;
+    estTime: string;
+    estCost: string;
+    whyItMatters: string;
+    whatYoullLearn: string[];
+  };
+  flow: import("@/components/flows/TaskFlowEngine").FlowDefinition;
+  useCustomComponent?: boolean; // true for HVAC which has its own component
 }
 
-/* ── Generic flow types (non-HVAC) ─────────────────── */
+const TASK_FLOWS: Record<string, TaskFlowConfig> = {
+  "find-hvac-filter": {
+    detail: {
+      title: "Find & Understand Your HVAC Filter",
+      category: "HVAC",
+      difficulty: "Easy",
+      estTime: "10-15 min",
+      estCost: "Free",
+      whyItMatters:
+        "Your HVAC filter catches dust, pet hair, pollen, and allergens before they circulate through your house. When it gets clogged, your system works harder (costing you more money) and your air quality drops. But before you can change it, you need to know where it is and what kind you have.",
+      whatYoullLearn: [
+        "Where your HVAC unit is",
+        "Where your filter lives",
+        "What size filter you need",
+      ],
+    },
+    flow: null as any, // Uses custom component
+    useCustomComponent: true,
+  },
+  "find-water-shutoff": {
+    detail: waterShutoffDetail,
+    flow: waterShutoffFlow,
+  },
+  "find-gas-shutoff": {
+    detail: gasShutoffDetail,
+    flow: gasShutoffFlow,
+  },
+  "label-electrical-panel": {
+    detail: electricalPanelDetail,
+    flow: electricalPanelFlow,
+  },
+  "safety-device-check": {
+    detail: safetyDeviceDetail,
+    flow: safetyDeviceFlow,
+  },
+  "check-water-heater-temp": {
+    detail: waterHeaterDetail,
+    flow: waterHeaterFlow,
+  },
+  "interior-walkthrough": {
+    detail: interiorWalkthroughDetail,
+    flow: interiorWalkthroughFlow,
+  },
+};
+
+function getFlowConfig(task: TaskForModal): TaskFlowConfig | null {
+  // Match by template_id first
+  if (task.template_id && TASK_FLOWS[task.template_id]) {
+    return TASK_FLOWS[task.template_id];
+  }
+  // Fallback: match by title
+  const titleLower = (task.title || "").toLowerCase();
+  for (const [key, config] of Object.entries(TASK_FLOWS)) {
+    if (titleLower.includes(config.detail.title.toLowerCase().slice(0, 20))) {
+      return config;
+    }
+  }
+  return null;
+}
+
+/* ── Generic flow types (non-guided) ─────────────────── */
 
 interface Message {
   id: number;
@@ -107,9 +169,11 @@ const TaskChatModal = ({ task, open, onClose }: TaskChatModalProps) => {
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  const flowConfig = task ? getFlowConfig(task) : null;
+
   useEffect(() => {
     if (task && open) {
-      if (isHVACFilterTask(task)) {
+      if (flowConfig) {
         setPhase("detail");
       } else {
         setPhase("generic");
@@ -217,31 +281,43 @@ const TaskChatModal = ({ task, open, onClose }: TaskChatModalProps) => {
 
   return (
     <AnimatePresence>
-      {open && phase === "detail" && (
+      {/* Detail view for guided tasks */}
+      {open && phase === "detail" && flowConfig && (
         <TaskDetailView
           key="detail"
-          title={HVAC_FILTER_DETAIL.title}
-          category={HVAC_FILTER_DETAIL.category}
-          difficulty={HVAC_FILTER_DETAIL.difficulty}
-          estTime={HVAC_FILTER_DETAIL.estTime}
-          estCost={HVAC_FILTER_DETAIL.estCost}
-          whyItMatters={HVAC_FILTER_DETAIL.whyItMatters}
-          whatYoullLearn={HVAC_FILTER_DETAIL.whatYoullLearn}
+          title={flowConfig.detail.title}
+          category={flowConfig.detail.category}
+          difficulty={flowConfig.detail.difficulty}
+          estTime={flowConfig.detail.estTime}
+          estCost={flowConfig.detail.estCost}
+          whyItMatters={flowConfig.detail.whyItMatters}
+          whatYoullLearn={flowConfig.detail.whatYoullLearn}
           onBack={onClose}
           onWalkthrough={() => setPhase("walkthrough")}
           onAlreadyDone={onClose}
         />
       )}
 
-      {open && phase === "walkthrough" && (
+      {/* Walkthrough: HVAC uses custom component, others use TaskFlowEngine */}
+      {open && phase === "walkthrough" && flowConfig && flowConfig.useCustomComponent && (
         <HVACFilterFlow
-          key="walkthrough"
+          key="walkthrough-hvac"
           onClose={onClose}
           onComplete={onClose}
-          taskTitle={HVAC_FILTER_DETAIL.title}
+          taskTitle={flowConfig.detail.title}
         />
       )}
 
+      {open && phase === "walkthrough" && flowConfig && !flowConfig.useCustomComponent && (
+        <TaskFlowEngine
+          key="walkthrough-engine"
+          flow={flowConfig.flow}
+          onClose={onClose}
+          onComplete={onClose}
+        />
+      )}
+
+      {/* Generic fallback for tasks without guided flows */}
       {open && phase === "generic" && (
         <motion.div
           key="generic"
