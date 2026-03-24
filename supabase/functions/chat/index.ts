@@ -90,7 +90,7 @@ serve(async (req) => {
       );
     }
 
-    const { messages } = body;
+    const { messages, mockDocuments: clientDocs, homeSystems: clientSystems } = body;
 
     if (messages.length === 0 || messages.length > 100) {
       return new Response(
