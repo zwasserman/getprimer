@@ -12,6 +12,17 @@ import { electricalPanelFlow, electricalPanelDetail } from "@/components/flows/E
 import { safetyDeviceFlow, safetyDeviceDetail } from "@/components/flows/SafetyDeviceFlow";
 import { waterHeaterFlow, waterHeaterDetail } from "@/components/flows/WaterHeaterFlow";
 import { interiorWalkthroughFlow, interiorWalkthroughDetail } from "@/components/flows/InteriorWalkthroughFlow";
+import { protectPipesWinterFlow, protectPipesWinterDetail } from "@/components/flows/ProtectPipesWinterFlow";
+import { cleanGuttersFallFlow, cleanGuttersFallDetail } from "@/components/flows/CleanGuttersFallFlow";
+import { hvacTuneupHeatingFlow, hvacTuneupHeatingDetail } from "@/components/flows/HVACTuneupHeatingFlow";
+import { checkDoorWindowSealsFlow, checkDoorWindowSealsDetail } from "@/components/flows/CheckDoorWindowSealsFlow";
+import { drainSprinklerFlow, drainSprinklerDetail } from "@/components/flows/DrainSprinklerFlow";
+import { exteriorWalkthroughFallFlow, exteriorWalkthroughFallDetail } from "@/components/flows/ExteriorWalkthroughFallFlow";
+import { exteriorWalkthroughSpringFlow, exteriorWalkthroughSpringDetail } from "@/components/flows/ExteriorWalkthroughSpringFlow";
+import { cleanGuttersSpringFlow, cleanGuttersSpringDetail } from "@/components/flows/CleanGuttersSpringFlow";
+import { hvacTuneupACFlow, hvacTuneupACDetail } from "@/components/flows/HVACTuneupACFlow";
+import { testSumpPumpFlow, testSumpPumpDetail } from "@/components/flows/TestSumpPumpFlow";
+import { trimBranchesFlow, trimBranchesDetail } from "@/components/flows/TrimBranchesFlow";
 
 const iconMap: Record<string, typeof Flame> = {
   HVAC: Flame,
@@ -24,6 +35,7 @@ const iconMap: Record<string, typeof Flame> = {
   plumbing: Droplets,
   safety: Shield,
   electrical: Zap,
+  exterior: Flame,
   general: Flame,
 };
 
@@ -98,6 +110,50 @@ const TASK_FLOWS: Record<string, TaskFlowConfig> = {
   "interior-walkthrough": {
     detail: interiorWalkthroughDetail,
     flow: interiorWalkthroughFlow,
+  },
+  "protect-pipes-winter": {
+    detail: protectPipesWinterDetail,
+    flow: protectPipesWinterFlow,
+  },
+  "clean-gutters-fall": {
+    detail: cleanGuttersFallDetail,
+    flow: cleanGuttersFallFlow,
+  },
+  "hvac-tuneup-heating": {
+    detail: hvacTuneupHeatingDetail,
+    flow: hvacTuneupHeatingFlow,
+  },
+  "check-door-window-seals": {
+    detail: checkDoorWindowSealsDetail,
+    flow: checkDoorWindowSealsFlow,
+  },
+  "drain-sprinkler-system": {
+    detail: drainSprinklerDetail,
+    flow: drainSprinklerFlow,
+  },
+  "exterior-walkthrough-fall": {
+    detail: exteriorWalkthroughFallDetail,
+    flow: exteriorWalkthroughFallFlow,
+  },
+  "exterior-walkthrough-spring": {
+    detail: exteriorWalkthroughSpringDetail,
+    flow: exteriorWalkthroughSpringFlow,
+  },
+  "clean-gutters-spring": {
+    detail: cleanGuttersSpringDetail,
+    flow: cleanGuttersSpringFlow,
+  },
+  "hvac-tuneup-ac": {
+    detail: hvacTuneupACDetail,
+    flow: hvacTuneupACFlow,
+  },
+  "test-sump-pump-seasonal": {
+    detail: testSumpPumpDetail,
+    flow: testSumpPumpFlow,
+  },
+  "trim-branches": {
+    detail: trimBranchesDetail,
+    flow: trimBranchesFlow,
   },
 };
 
