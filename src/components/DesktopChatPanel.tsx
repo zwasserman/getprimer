@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Mic, Send, Sparkles, Loader2, MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { mockDocuments, mockHomeSystems } from "@/data/mockDocuments";
 
 interface Message {
   id: string;
