@@ -7,8 +7,13 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-function buildHomeContext(profile: Record<string, unknown> | null, documents: Record<string, unknown>[]): string {
-  if (!profile && documents.length === 0) return "";
+function buildHomeContext(
+  profile: Record<string, unknown> | null,
+  documents: Record<string, unknown>[],
+  clientDocs?: { title: string; category: string; aiSummary: string }[],
+  clientSystems?: { group: string; systems: string[] }[]
+): string {
+  if (!profile && documents.length === 0 && !clientDocs?.length && !clientSystems?.length) return "";
 
   let ctx = "\n\n--- HOME CONTEXT (use this to personalize answers) ---\n";
 
@@ -46,6 +51,15 @@ function buildHomeContext(profile: Record<string, unknown> | null, documents: Re
     ctx += "Home Profile:\n" + parts.map(p => `• ${p}`).join("\n") + "\n";
   }
 
+  // Home systems (from client)
+  if (clientSystems && clientSystems.length > 0) {
+    ctx += "\nHome Systems:\n";
+    for (const group of clientSystems) {
+      ctx += `• ${group.group}: ${group.systems.join(", ")}\n`;
+    }
+  }
+
+  // DB documents
   if (documents.length > 0) {
     ctx += "\nDocuments on file:\n";
     for (const doc of documents) {
@@ -53,6 +67,14 @@ function buildHomeContext(profile: Record<string, unknown> | null, documents: Re
       if (doc.appliance_name) line += ` — ${doc.appliance_name}`;
       if (doc.expiration_date) line += ` — expires ${doc.expiration_date}`;
       ctx += line + "\n";
+    }
+  }
+
+  // Client-side documents with AI summaries
+  if (clientDocs && clientDocs.length > 0) {
+    ctx += "\nDocuments on file (with summaries):\n";
+    for (const doc of clientDocs) {
+      ctx += `• ${doc.title} (${doc.category}): ${doc.aiSummary}\n`;
     }
   }
 
