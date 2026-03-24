@@ -35,6 +35,7 @@ const iconMap: Record<string, typeof Flame> = {
   plumbing: Droplets,
   safety: Shield,
   electrical: Zap,
+  exterior: Flame,
   general: Flame,
 };
 
