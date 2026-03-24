@@ -12,6 +12,17 @@ import { electricalPanelFlow, electricalPanelDetail } from "@/components/flows/E
 import { safetyDeviceFlow, safetyDeviceDetail } from "@/components/flows/SafetyDeviceFlow";
 import { waterHeaterFlow, waterHeaterDetail } from "@/components/flows/WaterHeaterFlow";
 import { interiorWalkthroughFlow, interiorWalkthroughDetail } from "@/components/flows/InteriorWalkthroughFlow";
+import { protectPipesWinterFlow, protectPipesWinterDetail } from "@/components/flows/ProtectPipesWinterFlow";
+import { cleanGuttersFallFlow, cleanGuttersFallDetail } from "@/components/flows/CleanGuttersFallFlow";
+import { hvacTuneupHeatingFlow, hvacTuneupHeatingDetail } from "@/components/flows/HVACTuneupHeatingFlow";
+import { checkDoorWindowSealsFlow, checkDoorWindowSealsDetail } from "@/components/flows/CheckDoorWindowSealsFlow";
+import { drainSprinklerFlow, drainSprinklerDetail } from "@/components/flows/DrainSprinklerFlow";
+import { exteriorWalkthroughFallFlow, exteriorWalkthroughFallDetail } from "@/components/flows/ExteriorWalkthroughFallFlow";
+import { exteriorWalkthroughSpringFlow, exteriorWalkthroughSpringDetail } from "@/components/flows/ExteriorWalkthroughSpringFlow";
+import { cleanGuttersSpringFlow, cleanGuttersSpringDetail } from "@/components/flows/CleanGuttersSpringFlow";
+import { hvacTuneupACFlow, hvacTuneupACDetail } from "@/components/flows/HVACTuneupACFlow";
+import { testSumpPumpFlow, testSumpPumpDetail } from "@/components/flows/TestSumpPumpFlow";
+import { trimBranchesFlow, trimBranchesDetail } from "@/components/flows/TrimBranchesFlow";
 
 const iconMap: Record<string, typeof Flame> = {
   HVAC: Flame,
