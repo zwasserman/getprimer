@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Mic, Send, Sparkles, Loader2, MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { mockDocuments, mockHomeSystems } from "@/data/mockDocuments";
 
 interface Message {
   id: string;
@@ -53,7 +54,11 @@ const DesktopChatPanel = ({ visible }: DesktopChatPanelProps) => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ messages: conversationHistory }),
+        body: JSON.stringify({
+          messages: conversationHistory,
+          mockDocuments: mockDocuments.map(d => ({ title: d.title, category: d.category, aiSummary: d.aiSummary })),
+          homeSystems: mockHomeSystems,
+        }),
       });
 
       if (!resp.ok || !resp.body) {
