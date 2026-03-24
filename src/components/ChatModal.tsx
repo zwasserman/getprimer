@@ -117,7 +117,11 @@ const ChatModal = ({ open, onClose, isEmbedded = false }: ChatModalProps) => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ messages: conversationHistory }),
+        body: JSON.stringify({
+          messages: conversationHistory,
+          mockDocuments: mockDocuments.map(d => ({ title: d.title, category: d.category, aiSummary: d.aiSummary })),
+          homeSystems: mockHomeSystems,
+        }),
       });
 
       if (!resp.ok || !resp.body) {
