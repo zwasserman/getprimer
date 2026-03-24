@@ -110,6 +110,50 @@ const TASK_FLOWS: Record<string, TaskFlowConfig> = {
     detail: interiorWalkthroughDetail,
     flow: interiorWalkthroughFlow,
   },
+  "protect-pipes-winter": {
+    detail: protectPipesWinterDetail,
+    flow: protectPipesWinterFlow,
+  },
+  "clean-gutters-fall": {
+    detail: cleanGuttersFallDetail,
+    flow: cleanGuttersFallFlow,
+  },
+  "hvac-tuneup-heating": {
+    detail: hvacTuneupHeatingDetail,
+    flow: hvacTuneupHeatingFlow,
+  },
+  "check-door-window-seals": {
+    detail: checkDoorWindowSealsDetail,
+    flow: checkDoorWindowSealsFlow,
+  },
+  "drain-sprinkler-system": {
+    detail: drainSprinklerDetail,
+    flow: drainSprinklerFlow,
+  },
+  "exterior-walkthrough-fall": {
+    detail: exteriorWalkthroughFallDetail,
+    flow: exteriorWalkthroughFallFlow,
+  },
+  "exterior-walkthrough-spring": {
+    detail: exteriorWalkthroughSpringDetail,
+    flow: exteriorWalkthroughSpringFlow,
+  },
+  "clean-gutters-spring": {
+    detail: cleanGuttersSpringDetail,
+    flow: cleanGuttersSpringFlow,
+  },
+  "hvac-tuneup-ac": {
+    detail: hvacTuneupACDetail,
+    flow: hvacTuneupACFlow,
+  },
+  "test-sump-pump-seasonal": {
+    detail: testSumpPumpDetail,
+    flow: testSumpPumpFlow,
+  },
+  "trim-branches": {
+    detail: trimBranchesDetail,
+    flow: trimBranchesFlow,
+  },
 };
 
 function getFlowConfig(task: TaskForModal): TaskFlowConfig | null {
