@@ -87,7 +87,7 @@ const HubPage = () => {
 
       {/* Ask Primer */}
       <button
-        onClick={() => window.dispatchEvent(new CustomEvent("open-chat"))}
+        onClick={() => navigate("/chat")}
         className="w-full mb-6 flex items-center gap-3 rounded-2xl bg-gradient-to-r from-primary/10 to-secondary/10 border border-primary/20 px-4 py-3.5 text-left transition-all active:scale-[0.98]"
       >
         <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center flex-shrink-0">
