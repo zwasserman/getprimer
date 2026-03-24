@@ -151,7 +151,7 @@ serve(async (req) => {
       if (docs) homeDocuments = docs;
     }
 
-    const homeContext = buildHomeContext(homeProfile, homeDocuments);
+    const homeContext = buildHomeContext(homeProfile, homeDocuments, clientDocs, clientSystems);
 
     // --- AI Gateway ---
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
